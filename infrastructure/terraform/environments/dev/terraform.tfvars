@@ -15,11 +15,11 @@ project_name = "msworkshop"
 location     = "East US"
 owner        = "DevOps-Team"
 
-# Networking
+# Networking - Simplified (removed app gateway for cost optimization)
 vnet_address_space            = ["10.0.0.0/16"]
 aks_subnet_cidr               = "10.0.1.0/24"
-app_gateway_subnet_cidr       = "10.0.2.0/24"
-private_endpoints_subnet_cidr = "10.0.3.0/24"
+# app_gateway_subnet_cidr       = "10.0.2.0/24"  # REMOVED - Use AKS Ingress instead
+# private_endpoints_subnet_cidr = "10.0.3.0/24"  # REMOVED - Not needed for dev
 
 # AKS Configuration - Cost Optimized for Development
 kubernetes_version      = "1.30.14"
@@ -93,15 +93,15 @@ app_configuration_keys = {
   }
 }
 
-# Private endpoints (disabled for dev to reduce costs)
-enable_private_endpoints = false
+# Private endpoints REMOVED for dev cost optimization
+# enable_private_endpoints = false
 
 # Cost Management
 monthly_budget = 10
 enable_critical_budget_alert = true
 
-# Auto-shutdown enabled for cost optimization
-enable_auto_shutdown = true
+# Auto-shutdown REMOVED for simplicity - use Azure policies instead
+# enable_auto_shutdown = true
 
 # Additional tags
 additional_tags = {

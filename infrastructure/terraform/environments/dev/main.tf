@@ -16,13 +16,6 @@ terraform {
     }
   }
 
-  # Remote state configuration (uncomment for production)
-  # backend "azurerm" {
-  #   resource_group_name  = "terraform-state-rg"
-  #   storage_account_name = "terraformstate"
-  #   container_name       = "tfstate"
-  #   key                 = "microservices-workshop/dev.terraform.tfstate"
-  # }
 }
 
 provider "azurerm" {
@@ -91,12 +84,9 @@ module "networking" {
   resource_group_name = azurerm_resource_group.main.name
   subnet_prefix       = "${local.naming_prefix}-${local.resource_suffix}"
 
-  # Subnet configuration
-  aks_subnet_cidr               = var.aks_subnet_cidr
-  app_gateway_subnet_cidr       = var.app_gateway_subnet_cidr
-  private_endpoints_subnet_cidr = var.private_endpoints_subnet_cidr
-
-  tags = local.common_tags
+  # Subnet configuration - Simplified for cost optimization
+  aks_subnet_cidr     = var.aks_subnet_cidr
+  tags                = local.common_tags
 }
 
 # =============================================================================
@@ -151,11 +141,6 @@ module "security" {
   app_config_sku           = var.app_config_sku
   app_configuration_keys   = var.app_configuration_keys
 
-  # Private endpoints (disabled for dev environment for cost optimization)
-  enable_key_vault_private_endpoint  = var.enable_private_endpoints
-  enable_app_config_private_endpoint = var.enable_private_endpoints
-  private_endpoint_subnet_id         = var.enable_private_endpoints ? module.networking.private_endpoints_subnet_id : null
-
   tags = local.common_tags
 
   depends_on = [module.networking]
@@ -179,13 +164,6 @@ module "acr" {
 
   # Cost optimization policies
   retention_policy = var.acr_retention_policy
-
-  # Private endpoint (disabled for dev environment)
-  enable_private_endpoint    = var.enable_private_endpoints
-  private_endpoint_subnet_id = var.enable_private_endpoints ? module.networking.private_endpoints_subnet_id : null
-
-  # Webhooks for CI/CD integration
-  webhooks = var.acr_webhooks
 
   tags = local.common_tags
 
@@ -297,29 +275,4 @@ resource "azurerm_consumption_budget_resource_group" "main" {
       contact_emails = var.alert_emails
     }
   }
-}
-
-# =============================================================================
-# AUTO-SHUTDOWN AUTOMATION ACCOUNT (Optional)
-# =============================================================================
-resource "azurerm_automation_account" "auto_shutdown" {
-  count               = var.enable_auto_shutdown ? 1 : 0
-  name                = "${local.naming_prefix}-automation-${local.resource_suffix}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-  sku_name            = "Basic"
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  tags = local.common_tags
-}
-
-# Role assignment for automation account to manage resources
-resource "azurerm_role_assignment" "automation_contributor" {
-  count                = var.enable_auto_shutdown ? 1 : 0
-  scope                = azurerm_resource_group.main.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_automation_account.auto_shutdown[0].identity[0].principal_id
 }

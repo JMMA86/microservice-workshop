@@ -1,16 +1,8 @@
 # Microservice App - PRFT Devops Training
 
-This is the application you are going to use through the whole traninig. This, hopefully, will teach you the fundamentals you need in a real project. You will find a basic TODO application designed with a [microservice architecture](https://microservices.io). Although is a TODO application, it is interesting because the microservices that compose it are written in different programming language or frameworks (Go, Python, Vue, Java, and NodeJS). With this design you will experiment with multiple build tools and environments.
-
-## Branching Strategy
-
-Information about branching strategy used for development and infraestructure could be found here:
-
-1. [Development Branching Strategy](/docs/branching-dev-strategy.md)
-2. [Infraestructure Branching Strategy](/docs/branching-infra-strategy.md)
+This is the application you are going to use through the whole traninig. This, hopefully, will teach you the fundamentals you need in a real project. You will find a basic TODO application designed with a [microservice architecture](https://microservices.io). Although is a TODO application, it is interesting because the microservices that compose it are written in different programming language or frameworks (Go, Python, Vue, Java, and NodeJS). With this design you will experiment with multiple build tools and environments. 
 
 ## Components
-
 In each folder you can find a more in-depth explanation of each component:
 
 1. [Users API](/users-api) is a Spring Boot application. Provides user profiles. At the moment, does not provide full CRUD, just getting a single user and all users.

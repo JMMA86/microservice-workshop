@@ -1,0 +1,17 @@
+# Ignore files during Docker build
+.dockerignore
+.git
+.gitignore
+README.md
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+Dockerfile*
+docker-compose*
