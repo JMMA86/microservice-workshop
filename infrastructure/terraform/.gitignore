@@ -1,0 +1,62 @@
+# =============================================================================
+# TERRAFORM GITIGNORE
+# Protect sensitive files and auto-generated configurations
+# =============================================================================
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Terraform plan files
+*.tfplan
+*.tfplan.*
+
+# Terraform variable files with sensitive data
+*.auto.tfvars
+
+# Environment variable files (contain sensitive backend config)
+.env
+*.env
+!.env.example
+
+# Auto-generated backend configuration files (contain access keys)
+backend-config.hcl
+GENERATED-backend-config.env
+
+# Terraform cache and modules
+.terraform/
+.terraform.lock.hcl
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log

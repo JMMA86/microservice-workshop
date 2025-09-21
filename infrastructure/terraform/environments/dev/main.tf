@@ -1,0 +1,325 @@
+# =============================================================================
+# DEVELOPMENT ENVIRONMENT - MAIN CONFIGURATION
+# Uses modular approach for infrastructure deployment
+# =============================================================================
+
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
+  }
+
+  # Remote state configuration (uncomment for production)
+  # backend "azurerm" {
+  #   resource_group_name  = "terraform-state-rg"
+  #   storage_account_name = "terraformstate"
+  #   container_name       = "tfstate"
+  #   key                 = "microservices-workshop/dev.terraform.tfstate"
+  # }
+}
+
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+  }
+
+  subscription_id = var.subscription_id
+}
+
+# Data source for current Azure client configuration
+data "azurerm_client_config" "current" {}
+
+# Random suffix for unique resource names
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
+# Local values for consistent naming and tagging
+locals {
+  environment     = var.environment
+  project_name    = var.project_name
+  resource_suffix = random_id.suffix.hex
+  location        = var.location
+
+  # Naming convention
+  naming_prefix = "${local.project_name}-${local.environment}"
+
+  # Common tags
+  common_tags = merge(var.additional_tags, {
+    Environment  = local.environment
+    Project      = local.project_name
+    CreatedBy    = "Terraform"
+    Purpose      = "DevOps-Training"
+    CostCenter   = "Training"
+    AutoShutdown = "true"
+    Owner        = var.owner
+    ManagedBy    = "Infrastructure-Team"
+  })
+}
+
+# =============================================================================
+# RESOURCE GROUP
+# =============================================================================
+resource "azurerm_resource_group" "main" {
+  name     = "${local.naming_prefix}-rg-${local.resource_suffix}"
+  location = local.location
+  tags     = local.common_tags
+}
+
+# =============================================================================
+# NETWORKING MODULE
+# =============================================================================
+module "networking" {
+  source = "../../modules/networking"
+
+  vnet_name           = "${local.naming_prefix}-vnet-${local.resource_suffix}"
+  address_space       = var.vnet_address_space
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  subnet_prefix       = "${local.naming_prefix}-${local.resource_suffix}"
+
+  # Subnet configuration
+  aks_subnet_cidr               = var.aks_subnet_cidr
+  app_gateway_subnet_cidr       = var.app_gateway_subnet_cidr
+  private_endpoints_subnet_cidr = var.private_endpoints_subnet_cidr
+
+  tags = local.common_tags
+}
+
+# =============================================================================
+# SECURITY MODULE (KEY VAULT + APP CONFIG)
+# =============================================================================
+module "security" {
+  source = "../../modules/security"
+
+  key_vault_name      = "${local.project_name}${local.environment}kv${local.resource_suffix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku_name            = var.key_vault_sku
+
+  # Key Vault configuration
+  soft_delete_retention_days    = var.key_vault_soft_delete_retention_days
+  purge_protection_enabled      = var.key_vault_purge_protection_enabled
+  public_network_access_enabled = var.key_vault_public_network_access_enabled
+
+  # Network ACLs
+  network_acls = {
+    default_action             = var.key_vault_network_acls.default_action
+    bypass                     = var.key_vault_network_acls.bypass
+    ip_rules                   = var.key_vault_network_acls.ip_rules
+    virtual_network_subnet_ids = var.key_vault_network_acls.virtual_network_subnet_ids
+  }
+
+  # Access policies - Include current user automatically
+  access_policies = merge(var.key_vault_access_policies, {
+    current_user = {
+      object_id = data.azurerm_client_config.current.object_id
+      key_permissions = [
+        "Get", "List", "Create", "Delete", "Recover", "Backup", "Restore"
+      ]
+      secret_permissions = [
+        "Get", "List", "Set", "Delete", "Recover", "Backup", "Restore"
+      ]
+      certificate_permissions = [
+        "Get", "List", "Create", "Delete", "Recover", "ManageContacts", "ManageIssuers"
+      ]
+      storage_permissions = [
+        "Get", "List", "Set", "Delete"
+      ]
+    }
+  })
+
+  # Secrets (will be added after AKS creation for service principal secrets)
+  secrets = var.initial_secrets
+
+  # App Configuration
+  enable_app_configuration = var.enable_app_configuration
+  app_config_name          = "${local.project_name}${local.environment}config${local.resource_suffix}"
+  app_config_sku           = var.app_config_sku
+  app_configuration_keys   = var.app_configuration_keys
+
+  # Private endpoints (disabled for dev environment for cost optimization)
+  enable_key_vault_private_endpoint  = var.enable_private_endpoints
+  enable_app_config_private_endpoint = var.enable_private_endpoints
+  private_endpoint_subnet_id         = var.enable_private_endpoints ? module.networking.private_endpoints_subnet_id : null
+
+  tags = local.common_tags
+
+  depends_on = [module.networking]
+}
+
+# =============================================================================
+# AZURE CONTAINER REGISTRY MODULE
+# =============================================================================
+module "acr" {
+  source = "../../modules/acr"
+
+  registry_name       = "${local.project_name}${local.environment}acr${local.resource_suffix}"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  sku                 = var.acr_sku
+  admin_enabled       = var.acr_admin_enabled
+
+  # Network configuration
+  public_network_access_enabled = var.acr_public_network_access_enabled
+  network_rule_bypass_option    = var.acr_network_rule_bypass_option
+
+  # Cost optimization policies
+  retention_policy = var.acr_retention_policy
+
+  # Private endpoint (disabled for dev environment)
+  enable_private_endpoint    = var.enable_private_endpoints
+  private_endpoint_subnet_id = var.enable_private_endpoints ? module.networking.private_endpoints_subnet_id : null
+
+  # Webhooks for CI/CD integration
+  webhooks = var.acr_webhooks
+
+  tags = local.common_tags
+
+  depends_on = [module.networking]
+}
+
+# =============================================================================
+# AZURE KUBERNETES SERVICE MODULE
+# =============================================================================
+module "aks" {
+  source = "../../modules/aks"
+
+  cluster_name        = "${local.naming_prefix}-aks-${local.resource_suffix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  dns_prefix          = "${local.naming_prefix}-aks"
+  kubernetes_version  = var.kubernetes_version
+  sku_tier            = var.aks_sku_tier
+
+  # Node pool configuration
+  node_count          = var.aks_node_count
+  vm_size             = var.aks_vm_size
+  enable_auto_scaling = var.aks_enable_auto_scaling
+  min_count           = var.aks_min_count
+  max_count           = var.aks_max_count
+
+  # Cost optimization
+  use_spot_instances = var.aks_use_spot_instances
+  spot_max_price     = var.aks_spot_max_price
+
+  # Node configuration
+  max_pods_per_node = var.aks_max_pods_per_node
+  os_disk_size_gb   = var.aks_os_disk_size_gb
+  max_surge         = var.aks_max_surge
+
+  # Network configuration
+  subnet_id      = module.networking.aks_subnet_id
+  network_plugin = var.aks_network_plugin
+  network_policy = var.aks_network_policy
+  dns_service_ip = var.aks_dns_service_ip
+  service_cidr   = var.aks_service_cidr
+
+  # Auto-scaler profile for cost optimization
+  auto_scaler_profile = var.aks_auto_scaler_profile
+
+  # Azure AD integration (disabled for dev environment)
+  enable_azure_ad_integration     = var.aks_enable_azure_ad_integration
+  azure_ad_admin_group_object_ids = var.aks_azure_ad_admin_group_object_ids
+  azure_rbac_enabled              = var.aks_azure_rbac_enabled
+
+  # Additional node pools
+  additional_node_pools = var.aks_additional_node_pools
+
+  # Maintenance window
+  maintenance_window = var.aks_maintenance_window
+
+  tags = local.common_tags
+
+  depends_on = [module.networking, module.acr]
+}
+
+# =============================================================================
+# ACR-AKS INTEGRATION
+# =============================================================================
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = module.acr.registry_id
+  role_definition_name = "AcrPull"
+  principal_id         = module.aks.kubelet_identity.object_id
+}
+
+# =============================================================================
+# BUDGET AND COST MANAGEMENT
+# =============================================================================
+resource "azurerm_consumption_budget_resource_group" "main" {
+  name              = "${local.naming_prefix}-budget"
+  resource_group_id = azurerm_resource_group.main.id
+
+  amount     = var.monthly_budget
+  time_grain = "Monthly"
+
+  time_period {
+    start_date = formatdate("YYYY-MM-01'T'00:00:00Z", timestamp())
+    end_date   = timeadd(formatdate("YYYY-MM-01'T'00:00:00Z", timestamp()), "8760h") # 1 year
+  }
+
+  notification {
+    enabled   = true
+    threshold = 60
+    operator  = "GreaterThan"
+
+    contact_emails = var.alert_emails
+  }
+
+  notification {
+    enabled   = true
+    threshold = 80
+    operator  = "GreaterThan"
+
+    contact_emails = var.alert_emails
+  }
+
+  dynamic "notification" {
+    for_each = var.enable_critical_budget_alert ? [1] : []
+    content {
+      enabled   = true
+      threshold = 90
+      operator  = "GreaterThan"
+
+      contact_emails = var.alert_emails
+    }
+  }
+}
+
+# =============================================================================
+# AUTO-SHUTDOWN AUTOMATION ACCOUNT (Optional)
+# =============================================================================
+resource "azurerm_automation_account" "auto_shutdown" {
+  count               = var.enable_auto_shutdown ? 1 : 0
+  name                = "${local.naming_prefix}-automation-${local.resource_suffix}"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  sku_name            = "Basic"
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  tags = local.common_tags
+}
+
+# Role assignment for automation account to manage resources
+resource "azurerm_role_assignment" "automation_contributor" {
+  count                = var.enable_auto_shutdown ? 1 : 0
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_automation_account.auto_shutdown[0].identity[0].principal_id
+}
