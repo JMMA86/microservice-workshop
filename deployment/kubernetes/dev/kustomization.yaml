@@ -1,0 +1,17 @@
+resources:
+  - auth-api.yaml
+  - acr-configmap.yaml
+
+configMapGenerator:
+  - name: acr-config
+    literals:
+      - acrName=msworkshopdevacr2176d3c3.azurecr.io
+
+vars:
+  - name: ACR_NAME
+    objref:
+      kind: ConfigMap
+      name: acr-config
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.acrName

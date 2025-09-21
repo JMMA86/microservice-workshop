@@ -225,6 +225,22 @@ module "aks" {
   depends_on = [module.networking, module.acr]
 }
 
+provider "kubernetes" {
+  host                   = module.aks.host
+  client_certificate     = base64decode(module.aks.kube_config[0].client_certificate)
+  client_key             = base64decode(module.aks.kube_config[0].client_key)
+  cluster_ca_certificate = base64decode(module.aks.kube_config[0].cluster_ca_certificate)
+}
+
+provider "helm" {
+  kubernetes =  {
+    host                   = module.aks.host
+    client_certificate     = base64decode(module.aks.kube_config[0].client_certificate)
+    client_key             = base64decode(module.aks.kube_config[0].client_key)
+    cluster_ca_certificate = base64decode(module.aks.kube_config[0].cluster_ca_certificate)
+  }
+}
+
 # =============================================================================
 # ACR-AKS INTEGRATION
 # =============================================================================
@@ -232,6 +248,23 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   scope                = module.acr.registry_id
   role_definition_name = "AcrPull"
   principal_id         = module.aks.kubelet_identity.object_id
+}
+
+resource "helm_release" "nginx_ingress" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  version    = "4.10.0"
+
+  create_namespace = true
+
+  set = [{
+    name  = "controller.publishService.enabled"
+    value = "true"
+  }]
+
+  depends_on = [module.aks]
 }
 
 # =============================================================================
