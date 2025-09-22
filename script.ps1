@@ -121,7 +121,8 @@ try {
     docker run -d --name log-message-processor --network microservices-network `
         -e REDIS_HOST=redis `
         -e REDIS_PORT=6379 `
-        -e REDIS_CHANNEL=messages `
+        -e REDIS_CHANNEL=log_channel `
+        -e ZIPKIN_URL=http://zipkin:9411/api/v2/spans `
         log-message-processor:latest
 }
 catch {

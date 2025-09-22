@@ -28,6 +28,16 @@ if __name__ == '__main__':
     pubsub.subscribe([redis_channel])
     for item in pubsub.listen():
         try:
+            # Handle different data types from Redis
+            data = item['data']
+            if isinstance(data, bytes):
+                message_str = data.decode("utf-8")
+            elif isinstance(data, str):
+                message_str = data
+            else:
+                print(f'Unexpected data type: {type(data)}, data: {data}')
+                continue
+            
             message = json.loads(str(item['data'].decode("utf-8")))
         except Exception as e:
             log_message(e)

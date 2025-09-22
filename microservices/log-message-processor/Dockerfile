@@ -1,26 +1,23 @@
-FROM python:3.9-slim
+# Use an official Python runtime as a parent image
+FROM python:3.6-alpine
 
+# Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements file
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy source code
+# Copy the current directory contents into the container at /app
 COPY . .
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV REDIS_HOST=localhost
-ENV REDIS_PORT=6379
-ENV REDIS_CHANNEL=messages
+# Install any needed packages specified in requirements.txt
+RUN apk add build-base
 
-# Run the application
-CMD ["python", "main.py"]
+# Install dependencies
+RUN pip install -r requirements.txt
+
+# Environment variables
+ENV REDIS_HOST=redis
+ENV REDIS_PORT=6379
+ENV REDIS_CHANNEL=log_channel
+ENV ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+
+# Execute the application
+CMD ["python3","-u","main.py"]
