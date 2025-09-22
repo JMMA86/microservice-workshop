@@ -101,9 +101,8 @@ catch {
 
 # Create todos-api Docker Container
 try {
-    docker run -d --name todos-api --network microservices-network -p 8082:3000 `
-        -e PORT=3000 `
-        -e NODE_ENV=production `
+    docker run -d --name todos-api --network microservices-network -p 8082:8082 `
+        -e PORT=8082 `
         -e JWT_SECRET=myfancysecret `
         -e USERS_API_ADDRESS=http://users-api:8080 `
         todos-api:latest

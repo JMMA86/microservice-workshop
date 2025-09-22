@@ -30,9 +30,12 @@ const redisClient = require("redis").createClient({
   }        
 });
 const port = process.env.TODO_API_PORT || 8082
-const jwtSecret = process.env.JWT_SECRET || "foo"
+const jwtSecret = process.env.JWT_SECRET || "myfancysecret"
 
 const app = express()
+
+const cors = require('cors');
+app.use(cors());
 
 // tracing
 const ctxImpl = new CLSContext('zipkin');
@@ -59,6 +62,6 @@ app.use(bodyParser.json())
 const routes = require('./routes')
 routes(app, {tracer, redisClient, logChannel})
 
-app.listen(port, function () {
+app.listen(port, '0.0.0.0', function () {
   console.log('todo list RESTful API server started on: ' + port)
 })
