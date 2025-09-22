@@ -3,7 +3,7 @@ name: Deploy ACR
 on:
   workflow_dispatch:
   push:
-    branches: [ main, dev ]
+    branches: [ infra/main, infra/dev ]
     paths:
       - "microservices/**"
 
