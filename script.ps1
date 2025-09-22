@@ -102,9 +102,13 @@ catch {
 # Create todos-api Docker Container
 try {
     docker run -d --name todos-api --network microservices-network -p 8082:8082 `
-        -e PORT=8082 `
+        -e TODO_API_PORT=8082 `
         -e JWT_SECRET=myfancysecret `
         -e USERS_API_ADDRESS=http://users-api:8080 `
+        -e REDIS_HOST=redis `
+        -e REDIS_PORT=6379 `
+        -e REDIS_CHANNEL=log_channel `
+        -e ZIPKIN_URL=http://zipkin:9411/api/v2/spans `
         todos-api:latest
 }
 catch {
