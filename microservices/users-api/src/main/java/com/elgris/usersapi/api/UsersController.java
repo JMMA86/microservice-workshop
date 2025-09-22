@@ -27,6 +27,11 @@ public class UsersController {
         return response;
     }
 
+    @RequestMapping(value = "/health", method = RequestMethod.GET)
+    public String health() {
+        return "OK";
+    }
+
     @RequestMapping(value = "/{username}",  method = RequestMethod.GET)
     public User getUser(HttpServletRequest request, @PathVariable("username") String username) {
 

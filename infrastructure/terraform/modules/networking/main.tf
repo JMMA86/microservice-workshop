@@ -48,9 +48,9 @@ resource "azurerm_network_security_group" "aks" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_ranges    = ["80", "443", "8080"]
+    destination_port_ranges    = ["80", "443"]
     source_address_prefix      = "Internet"
-    destination_address_prefix = var.aks_subnet_cidr
+    destination_address_prefix = "*"
   }
 }
 

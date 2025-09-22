@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: $(ACR_NAME)/frontend:latest
+        image: msworkshopdevacr2176d3c3.azurecr.io/frontend:latest
         ports:
         - containerPort: 80
 ---

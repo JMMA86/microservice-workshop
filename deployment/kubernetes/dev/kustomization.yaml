@@ -1,17 +1,13 @@
 resources:
-  - auth-api.yaml
-  - acr-configmap.yaml
+  # - auth-api.yaml
+  - users-api.yaml
+  - ingress.yaml
+  # - frontend.yaml
+  # - todos-api.yaml
+  # - log-message-processor.yaml
 
 configMapGenerator:
   - name: acr-config
+    behavior: create
     literals:
       - acrName=msworkshopdevacr2176d3c3.azurecr.io
-
-vars:
-  - name: ACR_NAME
-    objref:
-      kind: ConfigMap
-      name: acr-config
-      apiVersion: v1
-    fieldref:
-      fieldpath: data.acrName

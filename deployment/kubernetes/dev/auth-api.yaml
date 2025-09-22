@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: auth-api
-        image: $(ACR_NAME)/auth-api:latest
+        image: msworkshopdevacr2176d3c3.azurecr.io/auth-api:latest
         ports:
         - containerPort: 8080
 ---

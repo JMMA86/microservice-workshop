@@ -4,10 +4,11 @@ metadata:
   name: microservices-ingress
   annotations:
     kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
+  ingressClassName: nginx
   rules:
-    - host: microservices.local
-      http:
+    - http:
         paths:
           - path: /auth-api
             pathType: Prefix
@@ -37,10 +38,10 @@ spec:
                 name: todos-api
                 port:
                   number: 3000
-          - path: /users-api
-            pathType: Prefix
+          - path: /users-api(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: users-api
                 port:
-                  number: 8080
+                  number: 8083

@@ -14,9 +14,9 @@ spec:
     spec:
       containers:
       - name: users-api
-        image: $(ACR_NAME)/users-api:latest
+        image: msworkshopdevacr2176d3c3.azurecr.io/users-api:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8083
 ---
 apiVersion: v1
 kind: Service
@@ -27,5 +27,5 @@ spec:
   selector:
     app: users-api
   ports:
-  - port: 8080
-    targetPort: 8080
+  - port: 8083
+    targetPort: 8083
