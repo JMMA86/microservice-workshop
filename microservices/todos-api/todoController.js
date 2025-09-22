@@ -51,14 +51,29 @@ class TodoController {
     }
 
     _logOperation (opName, username, todoId) {
+        // Skip logging if Redis client is not available
+        if (!this._redisClient) {
+            console.log(`Log operation skipped (Redis unavailable): ${opName} for user ${username}, todo ${todoId}`);
+            return;
+        }
+
         this._tracer.scoped(() => {
             const traceId = this._tracer.id;
-            this._redisClient.publish(this._logChannel, JSON.stringify({
+            const logData = JSON.stringify({
                 zipkinSpan: traceId,
                 opName: opName,
                 username: username,
                 todoId: todoId,
-            }))
+            });
+            
+            // Add error handling for Redis publish operation
+            this._redisClient.publish(this._logChannel, logData, (err, result) => {
+                if (err) {
+                    console.error('Error publishing to Redis (operation continues):', err.message);
+                } else {
+                    console.log(`Log operation published: ${opName} for user ${username}, todo ${todoId}`);
+                }
+            });
         })
     }
 

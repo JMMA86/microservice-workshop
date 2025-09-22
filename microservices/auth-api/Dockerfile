@@ -33,6 +33,7 @@ EXPOSE 8000
 
 # Set default environment variables
 ENV AUTH_API_PORT=8000
+ENV USERS_API_ADDRESS=http://users-api:8080
 ENV JWT_SECRET=myfancysecret
 
 # Run the binary

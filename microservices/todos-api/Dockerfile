@@ -1,30 +1,28 @@
-FROM node:14-alpine
+# Usar imagen base oficial de Node.js
+FROM node:18-alpine
 
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Copy package files
+# Copiar archivos de dependencias
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Instalar dependencias
+RUN npm install
 
-# Copy source code
+# Copiar el código de la aplicación
 COPY . .
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
-USER nodejs
-
-# Expose port
-EXPOSE 3000
-
 # Set default environment variables
-ENV NODE_ENV=production
-ENV PORT=3000
+ENV TODO_API_PORT=8082
+ENV JWT_SECRET=myfancysecret
+ENV REDIS_HOST=redis
+ENV REDIS_PORT=6379
+ENV REDIS_CHANNEL=log_channel
+ENV ZIPKIN_URL=http://zipkin:9411/api/v2/spans
 
-# Start the application
+# Exponer el puerto
+EXPOSE 8082
+
+# Comando para ejecutar la aplicación
 CMD ["npm", "start"]

@@ -40,5 +40,11 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Expose port 80
 EXPOSE 80
 
+# Set default environment variables
+ENV PORT=80
+ENV AUTH_API_ADDRESS=http://127.0.0.1:8081
+ENV TODOS_API_ADDRESS=http://127.0.0.1:8082
+ENV ZIPKIN_URL=http://127.0.0.1:9411/api/v2/spans
+
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
