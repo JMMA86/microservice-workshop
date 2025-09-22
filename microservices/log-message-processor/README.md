@@ -8,6 +8,7 @@ The service scans environment for variables:
 - `REDIS_HOST` - host of Redis
 - `REDIS_PORT` - port of Redis
 - `REDIS_CHANNEL` - channel the processor is going to listen to
+- `ZIPKIN_URL` - address of `zipkin` service
 
 ## Building 
 

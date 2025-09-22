@@ -73,8 +73,6 @@ Write-Host "Creating Docker Containers for Microservices..."
 # Create users-api Docker Container (first, as other services depend on it)
 try {
     docker run -d --name users-api --network microservices-network -p 8083:8080 `
-        -e JWT_SECRET=myfancysecret `
-        -e SERVER_PORT=8080 `
         users-api:latest
 }
 catch {
@@ -89,9 +87,6 @@ Start-Sleep -Seconds 15
 # Create auth-api Docker Container (fixed port mapping)
 try {
     docker run -d --name auth-api --network microservices-network -p 8081:8000 `
-        -e AUTH_API_PORT=8000 `
-        -e USERS_API_ADDRESS=http://users-api:8080 `
-        -e JWT_SECRET=myfancysecret `
         auth-api:latest
 }
 catch {
@@ -102,13 +97,6 @@ catch {
 # Create todos-api Docker Container
 try {
     docker run -d --name todos-api --network microservices-network -p 8082:8082 `
-        -e TODO_API_PORT=8082 `
-        -e JWT_SECRET=myfancysecret `
-        -e USERS_API_ADDRESS=http://users-api:8080 `
-        -e REDIS_HOST=redis `
-        -e REDIS_PORT=6379 `
-        -e REDIS_CHANNEL=log_channel `
-        -e ZIPKIN_URL=http://zipkin:9411/api/v2/spans `
         todos-api:latest
 }
 catch {
@@ -119,10 +107,6 @@ catch {
 # Create log-message-processor Docker Container (with Redis connection)
 try {
     docker run -d --name log-message-processor --network microservices-network `
-        -e REDIS_HOST=redis `
-        -e REDIS_PORT=6379 `
-        -e REDIS_CHANNEL=log_channel `
-        -e ZIPKIN_URL=http://zipkin:9411/api/v2/spans `
         log-message-processor:latest
 }
 catch {
@@ -133,7 +117,7 @@ catch {
 # Agregar antes del frontend en el script
 docker run -d --name zipkin --network microservices-network -p 9411:9411 openzipkin/zipkin
 
-# Create frontend Docker Container (fixed environment variables for container network)
+# Create frontend Docker Container
 try {
     docker run -d --name frontend --network microservices-network -p 8080:80 `
         frontend:latest
