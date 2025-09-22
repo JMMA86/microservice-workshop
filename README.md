@@ -24,5 +24,10 @@ In each folder you can find a more in-depth explanation of each component:
 Take a look at the components diagram that describes them and their interactions.
 ![microservice-app-example](/arch-img/Microservices.png)
 
-**Deployment Diagram**: Provides an overview of the system architecture and deployment structure.
-![microservice-architecture](/arch-img/Deployment%20Diagram.png)
+**Deployment Diagram**: Provides an overview of the system deployment structure.
+![microservice-deployment](/arch-img/Deployment%20Diagram.png)
+
+**Arquitecture Diagram**: Provides an overview of the system arquitecture structure.
+![microservice-architecture](/arch-img/Architecture%20Diagram.png)
+
+Documentation of the last diagram can be found [here](docs\architecture-diagram-report.md).
