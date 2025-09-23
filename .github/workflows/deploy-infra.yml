@@ -5,11 +5,11 @@ on:
   push:
     branches: [ infra/main, infra/develop ]
     paths:
-      - "microservices/**"
+      - "infrastructure/**"
   pull_request:
     branches: [ infra/main, infra/develop ]
     paths:
-      - "microservices/**"
+      - "infrastructure/**"
 
 jobs:
   terraform-bootstrap:
