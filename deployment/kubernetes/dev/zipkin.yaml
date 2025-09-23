@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: zipkin
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: frontend
+      app: zipkin
   template:
     metadata:
       labels:
-        app: frontend
+        app: zipkin
     spec:
       containers:
-      - name: frontend
-        image: msworkshop1devacr.azurecr.io/frontend:latest
+      - name: zipkin
+        image: msworkshop1devacr.azurecr.io/zipkin
         ports:
-        - containerPort: 80
+        - containerPort: 9411
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend
+  name: zipkin
 spec:
   type: ClusterIP
   selector:
-    app: frontend
+    app: zipkin
   ports:
-  - port: 80
-    targetPort: 80
+  - port: 9411
+    targetPort: 9411

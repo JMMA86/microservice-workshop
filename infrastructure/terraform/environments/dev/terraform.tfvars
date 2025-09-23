@@ -11,7 +11,7 @@ alert_emails = ["criedboca@gmail.com"]
 
 # Basic configuration
 environment  = "dev"
-project_name = "msworkshop"
+project_name = "msworkshop1"
 location     = "East US"
 owner        = "DevOps-Team"
 

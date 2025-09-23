@@ -1,3 +1,5 @@
 TODO.md
 .vscode/
 .env
+
+scripts/*.ps1

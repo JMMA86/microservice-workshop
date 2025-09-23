@@ -1,126 +1,116 @@
-# Creating Docker Images for Microservices
+# Crear imágenes Docker para los microservicios
 Write-Host "Creating Docker Images for Microservices..."
 
-# Create auth-api Docker Image
-try {
-    docker build -t auth-api:latest -f ./microservices/auth-api/Dockerfile ./microservices/auth-api
-}
-catch {
-    Write-Host "Error creating auth-api Docker image: $_"
+# Variables para el ACR
+$acrName = "msworkshopdevacr"
+$acrLoginServer = "$acrName.azurecr.io"
+
+# Login en Azure Container Registry
+Write-Host "Logging in to Azure Container Registry..."
+az acr login --name $acrName
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error logging in to ACR."
     exit 1
 }
 
-# Create frontend Docker Image
-try {
-    docker build -t frontend:latest -f ./microservices/frontend/Dockerfile ./microservices/frontend
-}
-catch {
-    Write-Host "Error creating frontend Docker image: $_"
-    exit 1
+# Crear y etiquetar imágenes
+$images = @(
+    @{ name = "auth-api"; path = "./microservices/auth-api" },
+    @{ name = "frontend"; path = "./microservices/frontend" },
+    @{ name = "log-message-processor"; path = "./microservices/log-message-processor" },
+    @{ name = "todos-api"; path = "./microservices/todos-api" },
+    @{ name = "users-api"; path = "./microservices/users-api" },
+    @{ name = "redis"; path = ""; baseImage = "redis:alpine" },
+    @{ name = "zipkin"; path = ""; baseImage = "openzipkin/zipkin" }
+)
+
+foreach ($img in $images) {
+    $localTag = "$($img.name):latest"
+    $acrTag = "$acrLoginServer/$($img.name):latest"
+    try {
+        if ($img.path -ne "") {
+            docker build -t $localTag -f "$($img.path)/Dockerfile" $($img.path)
+        } else {
+            docker pull $($img.baseImage)
+            docker tag $($img.baseImage) $localTag
+        }
+        docker tag $localTag $acrTag
+        docker push $acrTag
+    }
+    catch {
+        Write-Host "Error building/tagging/pushing $($img.name): $_"
+        exit 1
+    }
 }
 
-# Create log-message-processor Docker Image
-try {
-    docker build -t log-message-processor:latest -f ./microservices/log-message-processor/Dockerfile ./microservices/log-message-processor
-}
-catch {
-    Write-Host "Error creating log-message-processor Docker image: $_"
-    exit 1
-}
+Write-Host "Docker Images built and pushed to ACR successfully."
 
-# Create todos-api Docker Image
-try {
-    docker build -t todos-api:latest -f ./microservices/todos-api/Dockerfile ./microservices/todos-api
-}
-catch {
-    Write-Host "Error creating todos-api Docker image: $_"
-    exit 1
-}
-
-# Create users-api Docker Image
-try {
-    docker build -t users-api:latest -f ./microservices/users-api/Dockerfile ./microservices/users-api
-}
-catch {
-    Write-Host "Error creating users-api Docker image: $_"
-    exit 1
-}
-
-Write-Host "Docker Images for Microservices created successfully."
-
-# Clean up existing containers and network
+# Limpieza de contenedores y red existentes
 Write-Host "Cleaning up existing containers and network..."
 docker rm -f auth-api frontend log-message-processor todos-api users-api redis zipkin 2>$null
 docker network rm microservices-network 2>$null
 
-# Create Docker network
+# Crear red Docker
 Write-Host "Creating Docker network..."
 docker network create microservices-network
 
-# Start Redis container (required by log-message-processor)
+# Iniciar contenedor Redis
 Write-Host "Starting Redis container..."
 try {
-    docker run -d --name redis --network microservices-network -p 6379:6379 redis:alpine
+    docker run -d --name redis --network microservices-network -p 6379:6379 $acrLoginServer/redis:latest
 }
 catch {
     Write-Host "Error creating Redis container: $_"
     exit 1
 }
 
-# Creating Docker Containers for Microservices
+# Crear contenedores de microservicios usando imágenes de ACR
 Write-Host "Creating Docker Containers for Microservices..."
 
-# Create users-api Docker Container (first, as other services depend on it)
 try {
     docker run -d --name users-api --network microservices-network -p 8083:8080 `
-        users-api:latest
+        $acrLoginServer/users-api:latest
 }
 catch {
     Write-Host "Error creating users-api Docker container: $_"
     exit 1
 }
 
-# Wait for users-api to be ready
 Write-Host "Waiting for users-api to be ready..."
 Start-Sleep -Seconds 15
 
-# Create auth-api Docker Container (fixed port mapping)
 try {
     docker run -d --name auth-api --network microservices-network -p 8081:8000 `
-        auth-api:latest
+        $acrLoginServer/auth-api:latest
 }
 catch {
     Write-Host "Error creating auth-api Docker container: $_"
     exit 1
 }
 
-# Create todos-api Docker Container
 try {
     docker run -d --name todos-api --network microservices-network -p 8082:8082 `
-        todos-api:latest
+        $acrLoginServer/todos-api:latest
 }
 catch {
     Write-Host "Error creating todos-api Docker container: $_"
     exit 1
 }
 
-# Create log-message-processor Docker Container (with Redis connection)
 try {
     docker run -d --name log-message-processor --network microservices-network `
-        log-message-processor:latest
+        $acrLoginServer/log-message-processor:latest
 }
 catch {
     Write-Host "Error creating log-message-processor Docker container: $_"
     exit 1
 }
 
-# Agregar antes del frontend en el script
-docker run -d --name zipkin --network microservices-network -p 9411:9411 openzipkin/zipkin
+docker run -d --name zipkin --network microservices-network -p 9411:9411 $acrLoginServer/zipkin:latest
 
-# Create frontend Docker Container
 try {
     docker run -d --name frontend --network microservices-network -p 8080:80 `
-        frontend:latest
+        $acrLoginServer/frontend:latest
 }
 catch {
     Write-Host "Error creating frontend Docker container: $_"
@@ -129,7 +119,6 @@ catch {
 
 Write-Host "Docker Containers for Microservices created successfully."
 
-# Display running containers
 Write-Host "`nRunning containers:"
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 

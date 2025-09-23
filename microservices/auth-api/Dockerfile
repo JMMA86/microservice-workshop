@@ -29,11 +29,11 @@ WORKDIR /root/
 COPY --from=builder /app/main .
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8080
 
 # Set default environment variables
-ENV AUTH_API_PORT=8000
-ENV USERS_API_ADDRESS=http://users-api:8080
+ENV AUTH_ZHK_API_PORT=8080
+ENV USERS_API_ADDRESS=http://users-api:8083
 ENV JWT_SECRET=myfancysecret
 
 # Run the binary

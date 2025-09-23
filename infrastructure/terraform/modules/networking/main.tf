@@ -52,6 +52,32 @@ resource "azurerm_network_security_group" "aks" {
     source_address_prefix      = "Internet"
     destination_address_prefix = "*"
   }
+
+  # Allow outbound Internet access from AKS
+  security_rule {
+    name                       = "AllowAKSToInternet"
+    priority                   = 120
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = var.aks_subnet_cidr
+    destination_address_prefix = "Internet"
+  }
+
+  # Allow internal VNet traffic
+  security_rule {
+    name                       = "AllowVNet"
+    priority                   = 130
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "VirtualNetwork"
+    destination_address_prefix = "VirtualNetwork"
+  } 
 }
 
 

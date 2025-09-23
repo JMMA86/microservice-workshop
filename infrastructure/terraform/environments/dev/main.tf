@@ -35,16 +35,10 @@ provider "azurerm" {
 # Data source for current Azure client configuration
 data "azurerm_client_config" "current" {}
 
-# Random suffix for unique resource names
-resource "random_id" "suffix" {
-  byte_length = 4
-}
-
 # Local values for consistent naming and tagging
 locals {
   environment     = var.environment
   project_name    = var.project_name
-  resource_suffix = random_id.suffix.hex
   location        = var.location
 
   # Naming convention
@@ -67,7 +61,7 @@ locals {
 # RESOURCE GROUP
 # =============================================================================
 resource "azurerm_resource_group" "main" {
-  name     = "${local.naming_prefix}-rg-${local.resource_suffix}"
+  name     = "${local.naming_prefix}-rg"
   location = local.location
   tags     = local.common_tags
 }
@@ -78,11 +72,11 @@ resource "azurerm_resource_group" "main" {
 module "networking" {
   source = "../../modules/networking"
 
-  vnet_name           = "${local.naming_prefix}-vnet-${local.resource_suffix}"
+  vnet_name           = "${local.naming_prefix}-vnet"
   address_space       = var.vnet_address_space
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  subnet_prefix       = "${local.naming_prefix}-${local.resource_suffix}"
+  subnet_prefix       = "${local.naming_prefix}"
 
   # Subnet configuration - Simplified for cost optimization
   aks_subnet_cidr     = var.aks_subnet_cidr
@@ -95,7 +89,7 @@ module "networking" {
 module "security" {
   source = "../../modules/security"
 
-  key_vault_name      = "${local.project_name}${local.environment}kv${local.resource_suffix}"
+  key_vault_name      = "${local.project_name}${local.environment}kv"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   sku_name            = var.key_vault_sku
@@ -137,7 +131,7 @@ module "security" {
 
   # App Configuration
   enable_app_configuration = var.enable_app_configuration
-  app_config_name          = "${local.project_name}${local.environment}config${local.resource_suffix}"
+  app_config_name          = "${local.project_name}${local.environment}config"
   app_config_sku           = var.app_config_sku
   app_configuration_keys   = var.app_configuration_keys
 
@@ -152,7 +146,7 @@ module "security" {
 module "acr" {
   source = "../../modules/acr"
 
-  registry_name       = "${local.project_name}${local.environment}acr${local.resource_suffix}"
+  registry_name       = "${local.project_name}${local.environment}acr"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = var.acr_sku
@@ -176,7 +170,7 @@ module "acr" {
 module "aks" {
   source = "../../modules/aks"
 
-  cluster_name        = "${local.naming_prefix}-aks-${local.resource_suffix}"
+  cluster_name        = "${local.naming_prefix}-aks"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   dns_prefix          = "${local.naming_prefix}-aks"

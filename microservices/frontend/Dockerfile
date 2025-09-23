@@ -42,9 +42,9 @@ EXPOSE 80
 
 # Set default environment variables
 ENV PORT=80
-ENV AUTH_API_ADDRESS=http://127.0.0.1:8081
-ENV TODOS_API_ADDRESS=http://127.0.0.1:8082
-ENV ZIPKIN_URL=http://127.0.0.1:9411/api/v2/spans
+ENV AUTH_API_ADDRESS=http://auth-api:8080
+ENV TODOS_API_ADDRESS=http://todos-api:3000
+ENV ZIPKIN_URL=http://zipkin:9411/api/v2/spans
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

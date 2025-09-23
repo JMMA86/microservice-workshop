@@ -69,16 +69,6 @@ output "host" {
   sensitive   = true
 }
 
-output "additional_node_pools" {
-  description = "Information about additional node pools"
-  value = {
-    for name, pool in azurerm_kubernetes_cluster_node_pool.additional : name => {
-      id   = pool.id
-      name = pool.name
-    }
-  }
-}
-
 # Connection information
 output "kubectl_config_command" {
   description = "Command to configure kubectl"

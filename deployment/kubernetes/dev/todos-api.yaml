@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: todos-api
-        image: msworkshopdevacr2176d3c3.azurecr.io/todos-api:latest
+        image: msworkshop1devacr.azurecr.io/todos-api:latest
         ports:
         - containerPort: 3000
 ---

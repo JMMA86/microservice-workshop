@@ -15,7 +15,7 @@ RUN pip install -r requirements.txt
 
 # Environment variables
 ENV REDIS_HOST=redis
-ENV REDIS_PORT=6379
+ENV REDIS_ZHK_PORT=6739
 ENV REDIS_CHANNEL=log_channel
 ENV ZIPKIN_URL=http://zipkin:9411/api/v2/spans
 

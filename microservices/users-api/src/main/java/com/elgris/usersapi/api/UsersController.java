@@ -1,25 +1,31 @@
 package com.elgris.usersapi.api;
 
-import com.elgris.usersapi.models.User;
-import com.elgris.usersapi.repository.UserRepository;
-import io.jsonwebtoken.Claims;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.elgris.usersapi.models.User;
+import com.elgris.usersapi.repository.UserRepository;
+
+import io.jsonwebtoken.Claims;
+
 @RestController()
-@RequestMapping("/users")
+@RequestMapping("/users-api")
 public class UsersController {
 
     @Autowired
     private UserRepository userRepository;
 
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
+    @RequestMapping(value = "/users", method = RequestMethod.GET)
     public List<User> getUsers() {
         List<User> response = new LinkedList<>();
         userRepository.findAll().forEach(response::add);
@@ -32,7 +38,7 @@ public class UsersController {
         return "OK";
     }
 
-    @RequestMapping(value = "/{username}",  method = RequestMethod.GET)
+    @RequestMapping(value = "/users/{username}",  method = RequestMethod.GET)
     public User getUser(HttpServletRequest request, @PathVariable("username") String username) {
 
         Object requestAttribute = request.getAttribute("claims");
@@ -41,8 +47,10 @@ public class UsersController {
         }
 
         Claims claims = (Claims) requestAttribute;
+        String jwtUsername = (String)claims.get("username");
+        String jwtRole = (String)claims.get("role");
 
-        if (!username.equalsIgnoreCase((String)claims.get("username"))) {
+        if (!username.equalsIgnoreCase(jwtUsername) && (jwtRole == null || !jwtRole.equalsIgnoreCase("admin"))) {
             throw new AccessDeniedException("No access for requested entity");
         }
 

@@ -32,7 +32,7 @@ The service scans environment for variables:
 - `TODO_API_PORT` - the port the service takes.
 - `JWT_SECRET` - secret value for JWT token processing. Must be the same amongst all components.
 - `REDIS_HOST` - host of Redis
-- `REDIS_PORT` - port of Redis
+- `REDIS_ZHK_PORT` - port of Redis
 - `REDIS_CHANNEL` - channel the processor is going to listen to
 - `ZIPKIN_URL` - address of `zipkin` service
 
