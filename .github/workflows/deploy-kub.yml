@@ -1,0 +1,50 @@
+name: Deploy Kubernetes
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ infra/main, infra/develop ]
+    paths:
+      - "deployment/kubernetes/**"
+
+jobs:
+  deploy-kubernetes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        run: |
+          az login --service-principal \
+            --username ${{ secrets.AZURE_CLIENT_ID }} \
+            --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get AKS Credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+            --name ${{ secrets.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Deploy with Kustomize
+        working-directory: deployment/kubernetes/dev
+        run: kubectl apply -k .
+
+      - name: Wait for Pods to be Running
+        run: |
+          ATTEMPTS=30
+          for i in $(seq 1 $ATTEMPTS); do
+            NOT_READY=$(kubectl get pods --no-headers | awk '{print $2}' | grep -v '^[0-9]*/\1$' || true)
+            if [ -z "$NOT_READY" ]; then
+              echo "All pods are Running."
+              exit 0
+            fi
+            echo "Pods not ready yet. Attempt $i/$ATTEMPTS"
+            sleep 10
+          done
+          echo "Pods did not reach Running state in time."
+          kubectl get pods
+          exit 1
