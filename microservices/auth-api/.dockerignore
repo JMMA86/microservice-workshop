@@ -1,0 +1,10 @@
+# Ignore files during Docker build
+.dockerignore
+.git
+.gitignore
+README.md
+.env
+vendor/
+*.log
+Dockerfile*
+docker-compose*

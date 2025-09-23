@@ -24,7 +24,7 @@ var (
 )
 
 func main() {
-	hostport := ":" + os.Getenv("AUTH_API_PORT")
+	hostport := ":" + os.Getenv("AUTH_ZHK_API_PORT")
 	userAPIAddress := os.Getenv("USERS_API_ADDRESS")
 
 	envJwtSecret := os.Getenv("JWT_SECRET")
@@ -63,11 +63,15 @@ func main() {
 	e.Use(middleware.CORS())
 
 	// Route => handler
-	e.GET("/version", func(c echo.Context) error {
+	e.GET("/auth-api/version", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Auth API, written in Go\n")
 	})
 
-	e.POST("/login", getLoginHandler(userService))
+	e.GET("/auth-api/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "OK")
+	})
+
+	e.POST("/auth-api/login", getLoginHandler(userService))
 
 	// Start server
 	e.Logger.Fatal(e.Start(hostport))

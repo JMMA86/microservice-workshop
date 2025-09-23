@@ -3,6 +3,23 @@
 # All outputs from the development infrastructure
 # =============================================================================
 
+# Generate backend-config.hcl for DEV environment
+resource "local_file" "aks_acr_config_dev" {
+  content = <<-EOT
+# =============================================================================
+# AKS and ACR Configuration File - DEV Environment
+# Generated automatically by dev environment
+# =============================================================================
+aks_cluster_name = "${module.aks.cluster_name}"
+acr_registry_name = "${module.acr.registry_name}"
+# =============================================================================
+# USAGE:
+# Use these values in your deployment scripts or CI/CD pipelines
+# =============================================================================
+EOT
+  filename = "./aks-acr-config.cfg"
+}
+
 # Resource Group
 output "resource_group_name" {
   description = "Name of the resource group"
@@ -19,18 +36,16 @@ output "resource_group_id" {
   value       = azurerm_resource_group.main.id
 }
 
-# Networking
+# Networking - Simplified for cost optimization
 output "networking" {
   description = "Networking configuration details"
   value = {
-    vnet_id                       = module.networking.vnet_id
-    vnet_name                     = module.networking.vnet_name
-    aks_subnet_id                 = module.networking.aks_subnet_id
-    aks_subnet_name               = module.networking.aks_subnet_name
-    app_gateway_subnet_id         = module.networking.app_gateway_subnet_id
-    app_gateway_subnet_name       = module.networking.app_gateway_subnet_name
-    private_endpoints_subnet_id   = module.networking.private_endpoints_subnet_id
-    private_endpoints_subnet_name = module.networking.private_endpoints_subnet_name
+    vnet_id         = module.networking.vnet_id
+    vnet_name       = module.networking.vnet_name
+    aks_subnet_id   = module.networking.aks_subnet_id
+    aks_subnet_name = module.networking.aks_subnet_name
+    # app_gateway_subnet resources removed for cost optimization
+    # private_endpoints_subnet resources removed for cost optimization
   }
 }
 
@@ -112,14 +127,7 @@ output "budget" {
   }
 }
 
-# Auto-shutdown
-output "auto_shutdown" {
-  description = "Auto-shutdown configuration"
-  value = var.enable_auto_shutdown ? {
-    automation_account_name = azurerm_automation_account.auto_shutdown[0].name
-    automation_account_id   = azurerm_automation_account.auto_shutdown[0].id
-  } : null
-}
+
 
 # Connection Commands
 output "connection_commands" {
@@ -143,8 +151,8 @@ output "environment_summary" {
     acr_registry              = module.acr.registry_name
     key_vault                 = module.security.key_vault_name
     monthly_budget            = var.monthly_budget
-    auto_shutdown_enabled     = var.enable_auto_shutdown
-    private_endpoints_enabled = var.enable_private_endpoints
+    auto_shutdown_enabled     = false  
+    private_endpoints_enabled = false  
     cost_optimization = {
       aks_sku_tier       = var.aks_sku_tier
       aks_spot_instances = var.aks_use_spot_instances

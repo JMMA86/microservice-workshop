@@ -1,0 +1,15 @@
+resources:
+  - auth-api.yaml
+  - users-api.yaml
+  - ingress.yaml
+  - frontend.yaml
+  - todos-api.yaml
+  - log-message-processor.yaml
+  - redis.yaml
+  - zipkin.yaml
+
+configMapGenerator:
+  - name: acr-config
+    behavior: create
+    literals:
+      - acrName=msworkshop1devacr.azurecr.io
