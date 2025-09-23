@@ -6,6 +6,10 @@ on:
     branches: [ infra/main, infra/develop ]
     paths:
       - "microservices/**"
+  pull_request:
+    branches: [ infra/main, infra/develop ]
+    paths:
+      - "microservices/**"
 
 jobs:
   build-and-push:

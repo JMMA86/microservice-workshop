@@ -6,6 +6,10 @@ on:
     branches: [ infra/main, infra/develop ]
     paths:
       - "deployment/kubernetes/**"
+  pull_request:
+    branches: [ infra/main, infra/develop ]
+    paths:
+      - "deployment/kubernetes/**"
 
 jobs:
   deploy-kubernetes:
