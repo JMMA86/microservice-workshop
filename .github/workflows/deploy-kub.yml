@@ -5,11 +5,11 @@ on:
   push:
     branches: [ infra/main, infra/develop ]
     paths:
-      - "microservices/**"
+      - "deployment/kubernetes/**"
   pull_request:
     branches: [ infra/main, infra/develop ]
     paths:
-      - "microservices/**"
+      - "deployment/kubernetes/**"
 
 jobs:
   deploy-kubernetes:
