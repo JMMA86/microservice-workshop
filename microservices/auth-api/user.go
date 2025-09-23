@@ -51,7 +51,8 @@ func (h *UserService) Login(ctx context.Context, username, password string) (Use
 func (h *UserService) getUser(ctx context.Context, username string) (User, error) {
 	var user User
 
-	token, err := h.getUserAPIToken(username)
+	// Llamada interna: no generes un nuevo token, usa un token de solo lectura sin rol
+	token, err := h.getUserAPITokenWithRole(username, "")
 	if err != nil {
 		return user, err
 	}
@@ -81,10 +82,15 @@ func (h *UserService) getUser(ctx context.Context, username string) (User, error
 	return user, err
 }
 
-func (h *UserService) getUserAPIToken(username string) (string, error) {
+// Genera un JWT con username y role (si se provee)
+func (h *UserService) getUserAPITokenWithRole(username, role string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["username"] = username
 	claims["scope"] = "read"
+	if role != "" {
+		claims["role"] = role
+	}
+	fmt.Println("[auth-api] jwtSecret used for signing:", jwtSecret, "role:", role) // DEBUG
 	return token.SignedString([]byte(jwtSecret))
 }

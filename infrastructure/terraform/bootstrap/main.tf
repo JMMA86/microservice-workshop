@@ -11,10 +11,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.1"
-    }
   }
   
   # NO backend block - this uses local state to create the backend infrastructure
@@ -29,11 +25,7 @@ provider "azurerm" {
       purge_soft_delete_on_destroy = true
     }
   }
-}
-
-# Random suffix for unique storage account name
-resource "random_id" "storage_suffix" {
-  byte_length = 4
+  subscription_id = var.subscription_id
 }
 
 # Data source for current Azure client configuration
@@ -54,7 +46,7 @@ resource "azurerm_resource_group" "tfstate" {
 
 # Storage account for Terraform state
 resource "azurerm_storage_account" "tfstate" {
-  name                     = "tfstate${random_id.storage_suffix.hex}"
+  name                     = "${var.environment_prefix}tfstate"
   resource_group_name      = azurerm_resource_group.tfstate.name
   location                 = azurerm_resource_group.tfstate.location
   account_tier             = "Standard"
@@ -108,7 +100,7 @@ resource "azurerm_storage_container" "tfstate_prod" {
 
 # Key Vault for storing sensitive backend information (optional)
 resource "azurerm_key_vault" "tfstate" {
-  name                = "tfstate-kv-${random_id.storage_suffix.hex}"
+  name                = "${var.environment_prefix}-tfstate-kv"
   location            = azurerm_resource_group.tfstate.location
   resource_group_name = azurerm_resource_group.tfstate.name
   tenant_id           = data.azurerm_client_config.current.tenant_id

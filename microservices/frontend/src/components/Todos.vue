@@ -57,6 +57,8 @@ import AppNav from '@/components/AppNav'
 import TodoItem from '@/components/TodoItem'
 import Spinner from '@/components/common/Spinner'
 
+const TODOS_API_URL = process.env.VUE_APP_TODOS_API_ADDRESS || 'http://127.0.0.1:8082'
+
 export default {
   name: 'todos',
   components: {AppNav, TodoItem, Spinner},
@@ -86,7 +88,7 @@ export default {
     loadTasks () {
       this.isProcessing = true
       this.errorMessage = ''
-      this.$http.get('/todos').then(response => {
+      this.$http.get(TODOS_API_URL + '/todos').then(response => {
         for (var i in response.body) {
           this.tasks.push(response.body[i])
         }
@@ -106,7 +108,7 @@ export default {
           content: this.newTask
         }
 
-        this.$http.post('/todos', task).then(response => {
+        this.$http.post(TODOS_API_URL + '/todos', task).then(response => {
           this.newTask = ''
           this.isProcessing = false
           this.tasks.push(task)
@@ -123,7 +125,7 @@ export default {
       this.isProcessing = true
       this.errorMessage = ''
 
-      this.$http.delete('/todos/' + item.id).then(response => {
+      this.$http.delete(TODOS_API_URL + '/todos/' + item.id).then(response => {
         this.isProcessing = false
         this.tasks.splice(index, 1)
       }, error => {

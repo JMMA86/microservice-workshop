@@ -19,7 +19,7 @@ variable "environment" {
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "msworkshop"
+  default     = "msworkshop1"
 }
 
 variable "location" {
@@ -50,17 +50,18 @@ variable "aks_subnet_cidr" {
   default     = "10.0.1.0/24"
 }
 
-variable "app_gateway_subnet_cidr" {
-  description = "CIDR block for Application Gateway subnet"
-  type        = string
-  default     = "10.0.2.0/24"
-}
+# REMOVED variables for cost optimization
+# variable "app_gateway_subnet_cidr" {
+#   description = "CIDR block for Application Gateway subnet"
+#   type        = string
+#   default     = "10.0.2.0/24"
+# }
 
-variable "private_endpoints_subnet_cidr" {
-  description = "CIDR block for Private Endpoints subnet"
-  type        = string
-  default     = "10.0.3.0/24"
-}
+# variable "private_endpoints_subnet_cidr" {
+#   description = "CIDR block for Private Endpoints subnet"
+#   type        = string
+#   default     = "10.0.3.0/24"
+# }
 
 # =============================================================================
 # AKS CONFIGURATION
@@ -407,11 +408,12 @@ variable "app_configuration_keys" {
 # PRIVATE ENDPOINTS
 # =============================================================================
 
-variable "enable_private_endpoints" {
-  description = "Enable private endpoints for enhanced security"
-  type        = bool
-  default     = false
-}
+# REMOVED for cost optimization
+# variable "enable_private_endpoints" {
+#   description = "Enable private endpoints for enhanced security"
+#   type        = bool
+#   default     = false
+# }
 
 # =============================================================================
 # COST MANAGEMENT
@@ -438,11 +440,12 @@ variable "enable_critical_budget_alert" {
 # AUTO-SHUTDOWN
 # =============================================================================
 
-variable "enable_auto_shutdown" {
-  description = "Enable auto-shutdown for cost optimization"
-  type        = bool
-  default     = true
-}
+# REMOVED for cost optimization
+# variable "enable_auto_shutdown" {
+#   description = "Enable auto-shutdown for cost optimization"
+#   type        = bool
+#   default     = true
+# }
 
 # =============================================================================
 # TAGS
