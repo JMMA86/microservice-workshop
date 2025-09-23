@@ -17,6 +17,11 @@ spec:
         image: msworkshop1devacr.azurecr.io/todos-api:latest
         ports:
         - containerPort: 3000
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
