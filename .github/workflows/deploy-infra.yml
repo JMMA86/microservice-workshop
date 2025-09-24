@@ -51,7 +51,7 @@ jobs:
       
           function Run-Apply {
               try {
-                  $out = terraform apply -auto-approve tfplan 2>&1
+                  $out = terraform apply -auto-approve 2>&1
                   $exitCode = $LASTEXITCODE
                   return @{ Output = $out; ExitCode = $exitCode }
               } catch {
@@ -121,51 +121,55 @@ jobs:
         working-directory: infrastructure/terraform/environments/dev
         run: terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -out=tfplan
 
-      - name: Terraform Apply with auto-import (dev)
-        working-directory: infrastructure/terraform/environments/dev
+      - name: Terraform Apply with Auto-Import (PowerShell)
+        shell: pwsh
+        working-directory: infrastructure/terraform/bootstrap
         run: |
-          set -u
-          MAX_ATTEMPTS=3
-          ATTEMPT=0
-          SUCCESS=0
-
-          run_apply() {
-            terraform apply -auto-approve tfplan 2>&1
+          $maxAttempts = 3
+          $attempt = 0
+          $success = $false
+      
+          function Run-Apply {
+              try {
+                  $out = terraform apply -auto-approve 2>&1
+                  $exitCode = $LASTEXITCODE
+                  return @{ Output = $out; ExitCode = $exitCode }
+              } catch {
+                  return @{ Output = $_.Exception.Message; ExitCode = 1 }
+              }
           }
-
-          extract_and_import() {
-            local output="$1"
-            echo "$output" | grep -Po 'A resource with the ID `"[^`"]+`"[^,]+with .*,' | while read -r line; do
-              AZ_ID=$(echo "$line" | grep -Po 'ID `"\K[^`"]+')
-              TF_RES=$(echo "$line" | sed -E 's/.*with (.*),$/\1/')
-              echo "Importing $TF_RES -> $AZ_ID"
-              terraform import "$TF_RES" "$AZ_ID"
-            done
+      
+          function Extract-And-Import($output) {
+              $pattern = 'A resource with the ID `"([^`"]+)`"[^,]+with (.*),'
+              [regex]::Matches($output, $pattern) | ForEach-Object {
+                  $azureId = $_.Groups[1].Value
+                  $tfRes = $_.Groups[2].Value.Trim()
+                  Write-Host "Importing $tfRes -> $azureId"
+                  terraform import $tfRes $azureId
+              }
           }
-
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            ATTEMPT=$((ATTEMPT+1))
-            echo "Attempt #$ATTEMPT"
-            OUT=$(run_apply)
-            EXIT=$?
-            echo "$OUT"
-            if [ $EXIT -eq 0 ]; then
-              echo "Apply succeeded"
-              SUCCESS=1
-              break
-            fi
-            if echo "$OUT" | grep -q 'A resource with the ID'; then
-              extract_and_import "$OUT"
-            else
-              echo "Apply failed with unexpected error"
-              break
-            fi
-          done
-
-          if [ $SUCCESS -ne 1 ]; then
-            echo "Terraform apply failed after $MAX_ATTEMPTS attempts"
-            exit 1
-          fi
+      
+          while ($attempt -lt $maxAttempts -and -not $success) {
+              $attempt++
+              Write-Host "Attempt #$attempt"
+              $result = Run-Apply
+              Write-Host $result.Output
+      
+              if ($result.ExitCode -eq 0) {
+                  Write-Host "Apply succeeded"
+                  $success = $true
+                  break
+              }
+      
+              if ($result.Output -match 'A resource with the ID') {
+                  Extract-And-Import $result.Output
+              } else {
+                  Write-Host "Apply failed with unexpected error"
+                  break
+              }
+          }
+      
+          if (-not $success) { exit 1 }
 
       - name: Get Terraform Outputs
         id: terraform-output
