@@ -1,12 +1,14 @@
 resources:
   - auth-api.yaml
   - users-api.yaml
+  - ingress-nginx-loadbalancer.yaml
   - ingress.yaml
   - frontend.yaml
   - todos-api.yaml
   - log-message-processor.yaml
   - redis.yaml
   - zipkin.yaml
+  - todos-api-hpa.yaml
 
 configMapGenerator:
   - name: acr-config

@@ -41,7 +41,10 @@ public class UsersController {
     @RequestMapping(value = "/users/{username}",  method = RequestMethod.GET)
     public User getUser(HttpServletRequest request, @PathVariable("username") String username) {
 
+        System.out.println("[users-api] Requested user: " + username); // DEBUG
+
         Object requestAttribute = request.getAttribute("claims");
+        System.out.println("[users-api] Claims received in request attribute: " + requestAttribute); // DEBUG
         if((requestAttribute == null) || !(requestAttribute instanceof Claims)){
             throw new RuntimeException("Did not receive required data from JWT token");
         }
@@ -50,6 +53,8 @@ public class UsersController {
         String jwtUsername = (String)claims.get("username");
         String jwtRole = (String)claims.get("role");
 
+        System.out.println("[users-api] JWT username: " + jwtUsername); // DEBUG
+        System.out.println("[users-api] JWT role: " + jwtRole); // DEBUG
         if (!username.equalsIgnoreCase(jwtUsername) && (jwtRole == null || !jwtRole.equalsIgnoreCase("admin"))) {
             throw new AccessDeniedException("No access for requested entity");
         }

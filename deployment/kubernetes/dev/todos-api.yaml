@@ -16,7 +16,12 @@ spec:
       - name: todos-api
         image: msworkshop1devacr.azurecr.io/todos-api:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 8082
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
@@ -27,5 +32,5 @@ spec:
   selector:
     app: todos-api
   ports:
-  - port: 3000
-    targetPort: 3000
+  - port: 8082
+    targetPort: 8082

@@ -31,6 +31,7 @@ type UserService struct {
 	Client            HTTPDoer
 	UserAPIAddress    string
 	AllowedUserHashes map[string]interface{}
+	CircuitBreaker    *CircuitBreaker
 }
 
 func (h *UserService) Login(ctx context.Context, username, password string) (User, error) {
@@ -51,20 +52,36 @@ func (h *UserService) Login(ctx context.Context, username, password string) (Use
 func (h *UserService) getUser(ctx context.Context, username string) (User, error) {
 	var user User
 
-	// Llamada interna: no generes un nuevo token, usa un token de solo lectura sin rol
-	token, err := h.getUserAPITokenWithRole(username, "")
+	// Si el usuario es admin, incluye el claim role=admin en el token
+	role := ""
+	if username == "admin" {
+		role = "admin"
+	}
+	token, err := h.getUserAPITokenWithRole(username, role)
 	if err != nil {
 		return user, err
 	}
-	url := fmt.Sprintf("%s/users/%s", h.UserAPIAddress, username)
+
+	url := fmt.Sprintf("%s/users-api/users/%s", h.UserAPIAddress, username)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
-
 	req = req.WithContext(ctx)
 
-	resp, err := h.Client.Do(req)
-	if err != nil {
-		return user, err
+	var resp *http.Response
+	var callErr error
+
+	// Use circuit breaker for users service call
+	cbErr := h.CircuitBreaker.Call(func() error {
+		resp, callErr = h.Client.Do(req)
+		return callErr
+	})
+
+	if cbErr != nil {
+		return user, fmt.Errorf("users service unavailable: %w", cbErr)
+	}
+
+	if callErr != nil {
+		return user, callErr
 	}
 
 	defer resp.Body.Close()

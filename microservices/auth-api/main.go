@@ -20,7 +20,11 @@ var (
 	// ErrWrongCredentials indicates that login attempt failed because of incorrect login or password
 	ErrWrongCredentials = echo.NewHTTPError(http.StatusUnauthorized, "username or password is invalid")
 
+	// ErrServiceUnavailable indicates that a downstream service is unavailable
+	ErrServiceUnavailable = echo.NewHTTPError(http.StatusServiceUnavailable, "authentication service temporarily unavailable, please try again later")
+
 	jwtSecret = "myfancysecret"
+	usersServiceCB *CircuitBreaker
 )
 
 func main() {
@@ -32,6 +36,9 @@ func main() {
 		jwtSecret = envJwtSecret
 	}
 
+	// Initialize circuit breaker: 3 failures, 30 second timeout
+	usersServiceCB = NewCircuitBreaker(3, 30*time.Second)
+
 	userService := UserService{
 		Client:         http.DefaultClient,
 		UserAPIAddress: userAPIAddress,
@@ -40,6 +47,7 @@ func main() {
 			"johnd_foo":   nil,
 			"janed_ddd":   nil,
 		},
+		CircuitBreaker: usersServiceCB,
 	}
 
 	e := echo.New()
@@ -69,6 +77,19 @@ func main() {
 
 	e.GET("/auth-api/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
+	})
+
+	e.GET("/auth-api/circuit-breaker-status", func(c echo.Context) error {
+		state := "CLOSED"
+		if usersServiceCB.GetState() == Open {
+			state = "OPEN"
+		} else if usersServiceCB.GetState() == HalfOpen {
+			state = "HALF_OPEN"
+		}
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"state":    state,
+			"failures": usersServiceCB.GetFailures(),
+		})
 	})
 
 	e.POST("/auth-api/login", getLoginHandler(userService))

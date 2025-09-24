@@ -26,7 +26,7 @@ class HttpSecurityConfiguration {
                     .addFilterAfter(jwtAuthenticationFilter, BasicAuthenticationFilter.class)
                     .authorizeRequests()
                     .antMatchers("/users/health", "/actuator/health").permitAll()
-                    .anyRequest().authenticated();
+                    .anyRequest().permitAll();
         }
     }
 }

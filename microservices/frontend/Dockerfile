@@ -25,6 +25,12 @@ RUN npm install --verbose --no-optional
 # Copy source code
 COPY . .
 
+# Set default environment variables
+ENV PORT=80
+ENV VUE_APP_AUTH_API_ADDRESS=http://57.151.78.16/auth-api
+ENV VUE_APP_TODOS_API_ADDRESS=http://57.151.78.16/todos-api
+ENV VUE_APP_ZIPKIN_URL=http://57.151.78.16/zipkin/api/v2/spans
+
 # Build the application
 RUN npm run build
 
@@ -39,12 +45,6 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80
-
-# Set default environment variables
-ENV PORT=80
-ENV AUTH_API_ADDRESS=http://auth-api:8080
-ENV TODOS_API_ADDRESS=http://todos-api:3000
-ENV ZIPKIN_URL=http://zipkin:9411/api/v2/spans
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
