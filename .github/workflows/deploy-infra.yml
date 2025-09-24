@@ -66,9 +66,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build and Push Docker Images
-        shell: pwsh
         run: |
-          ACR_NAME="${{ needs.terraform-dev.outputs.acr_name }}"
+          ACR_NAME="msworkshop1devacr"
           if [ -z "$ACR_NAME" ]; then
             echo "Error: ACR_NAME not available from Terraform outputs"
             exit 1
