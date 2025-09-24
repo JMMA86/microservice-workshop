@@ -9,11 +9,17 @@ Information about branching strategy used for development and infraestructure co
 1. [Development Branching Strategy](/docs/branching-dev-strategy.md)
 2. [Infraestructure Branching Strategy](/docs/branching-infra-strategy.md)
 
+## Infrastructure Deployment
+
+Step-by-step guide for deploying the complete infrastructure:
+
+3. [Infrastructure Deployment Process](/docs/infrastructure-process.md)
+
 ## Resilience Patterns
 
 Implementation of patterns for system reliability and scalability:
 
-3. [Resilience Patterns (Circuit Breaker & HPA)](/docs/resilience-patterns.md)
+4. [Resilience Patterns (Circuit Breaker & HPA)](/docs/resilience-patterns.md)
 
 ## Components
 
