@@ -42,9 +42,38 @@ jobs:
         working-directory: infrastructure/terraform/bootstrap
         run: terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -out=tfplan
 
-      - name: Terraform Apply (bootstrap)
+      - name: Terraform Apply with Auto-Import (bootstrap)
         working-directory: infrastructure/terraform/bootstrap
-        run: terraform apply -auto-approve tfplan
+        run: |
+          set -euo pipefail
+          MAX_ATTEMPTS=3
+          ATTEMPT=0
+
+          run_apply() {
+            terraform apply -auto-approve tfplan 2>&1 || true
+          }
+
+          extract_and_import() {
+            local output="$1"
+            echo "$output" | grep -Po 'A resource with the ID `"[^`"]+`"[^,]+with .*,' | while read -r line; do
+              AZ_ID=$(echo "$line" | grep -Po 'ID `"\K[^`"]+')
+              TF_RES=$(echo "$line" | sed -E 's/.*with (.*),$/\1/')
+              echo "Importing $TF_RES -> $AZ_ID"
+              terraform import "$TF_RES" "$AZ_ID"
+            done
+          }
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT+1))
+            echo "Attempt #$ATTEMPT"
+            OUT=$(run_apply)
+            echo "$OUT"
+            if echo "$OUT" | grep -q 'A resource with the ID'; then
+              extract_and_import "$OUT"
+            else
+              break
+            fi
+          done
 
   # 2. Deploy de infraestructura (ACR, AKS, etc.)
   terraform-dev:
@@ -77,9 +106,38 @@ jobs:
         working-directory: infrastructure/terraform/environments/dev
         run: terraform plan -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -out=tfplan
 
-      - name: Terraform Apply (dev)
+      - name: Terraform Apply with Auto-Import (dev)
         working-directory: infrastructure/terraform/environments/dev
-        run: terraform apply -auto-approve tfplan
+        run: |
+          set -euo pipefail
+          MAX_ATTEMPTS=3
+          ATTEMPT=0
+
+          run_apply() {
+            terraform apply -auto-approve tfplan 2>&1 || true
+          }
+
+          extract_and_import() {
+            local output="$1"
+            echo "$output" | grep -Po 'A resource with the ID `"[^`"]+`"[^,]+with .*,' | while read -r line; do
+              AZ_ID=$(echo "$line" | grep -Po 'ID `"\K[^`"]+')
+              TF_RES=$(echo "$line" | sed -E 's/.*with (.*),$/\1/')
+              echo "Importing $TF_RES -> $AZ_ID"
+              terraform import "$TF_RES" "$AZ_ID"
+            done
+          }
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT+1))
+            echo "Attempt #$ATTEMPT"
+            OUT=$(run_apply)
+            echo "$OUT"
+            if echo "$OUT" | grep -q 'A resource with the ID'; then
+              extract_and_import "$OUT"
+            else
+              break
+            fi
+          done
 
       - name: Get Terraform Outputs
         id: terraform-output
@@ -108,19 +166,16 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           ACR_NAME="${{ needs.terraform-dev.outputs.acr_name }}"
-          
           if [ -z "$ACR_NAME" ]; then
             echo "Error: ACR_NAME not available from Terraform outputs"
             exit 1
           fi
-          
+
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
-          
           echo "Logging into ACR: $ACR_NAME"
           az acr login --name $ACR_NAME
-          
-          declare -a images=("log-message-processor" "auth-api" "frontend" "todos-api" "users-api")
 
+          declare -a images=("log-message-processor" "auth-api" "frontend" "todos-api" "users-api")
           for img in "${images[@]}"; do
             echo "=== Building and pushing $img ==="
             docker build -t $img:latest ./microservices/$img
@@ -152,8 +207,6 @@ jobs:
         run: |
           ACR_NAME="${{ needs.terraform-dev.outputs.acr_name }}"
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
-          
-          # Aplicar manifiestos de Kubernetes
           find ./k8s -name "*.yaml" -o -name "*.yml" | while read manifest; do
             echo "Applying $manifest"
             envsubst < $manifest | kubectl apply -f -
