@@ -30,7 +30,14 @@ spec:
               service:
                 name: todos-api
                 port:
-                  number: 3000
+                  number: 8082
+          - path: /api/v2/spans
+            pathType: Prefix
+            backend:
+              service:
+                name: zipkin
+                port:
+                  number: 9411
           - path: /
             pathType: Prefix
             backend:
