@@ -2,6 +2,7 @@ import Vue from 'vue'
 import router from './router'
 import store from './store'
 import decode from 'jwt-decode'
+import CircuitBreaker from './circuitbreaker'
 
 /**
  * @var{string} LOGIN_URL The endpoint for logging in. This endpoint should be proxied by Webpack dev server
@@ -9,6 +10,9 @@ import decode from 'jwt-decode'
  */
 const LOGIN_URL = (process.env.VUE_APP_AUTH_API_ADDRESS || 'http://57.151.78.16/auth-api') + "/login"
 const ROLE_ADMIN = 'ADMIN'
+
+// Initialize circuit breaker for auth service: 3 failures, 30 seconds timeout
+const authServiceCB = new CircuitBreaker(3, 30000);
 
 /**
 * Auth Plugin
@@ -57,19 +61,30 @@ export default {
       password: creds.password
     }
 
-    return Vue.http.post(LOGIN_URL, params)
-      .then((response) => {
-        this._storeToken(response)
+    return authServiceCB.call(async () => {
+      const response = await Vue.http.post(LOGIN_URL, params)
+      
+      this._storeToken(response)
 
-        if (redirect) {
-          router.push({ name: redirect })
+      if (redirect) {
+        router.push({ name: redirect })
+      }
+
+      return response
+    })
+    .catch((errorResponse) => {
+      if (authServiceCB.isOpen()) {
+        // Circuit breaker is open, show user-friendly message
+        const error = {
+          status: 503,
+          body: {
+            message: 'Authentication service is temporarily unavailable. Please try again later.'
+          }
         }
-
-        return response
-      })
-      .catch((errorResponse) => {
-        return errorResponse
-      })
+        throw error
+      }
+      throw errorResponse
+    })
   },
 
   /**
@@ -103,6 +118,21 @@ export default {
   isLoggedIn () {
     const auth = store.state.auth
     return auth.isLoggedIn
+  },
+
+  /**
+   * Get circuit breaker status
+   * 
+   * @return {Object} Circuit breaker state and failures count
+   */
+  getCircuitBreakerStatus () {
+    return {
+      state: authServiceCB.getState(),
+      failures: authServiceCB.getFailures(),
+      isOpen: authServiceCB.isOpen(),
+      isClosed: authServiceCB.isClosed(),
+      isHalfOpen: authServiceCB.isHalfOpen()
+    }
   },
 
   /**
