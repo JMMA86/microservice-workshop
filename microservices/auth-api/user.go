@@ -51,12 +51,16 @@ func (h *UserService) Login(ctx context.Context, username, password string) (Use
 func (h *UserService) getUser(ctx context.Context, username string) (User, error) {
 	var user User
 
-	// Llamada interna: no generes un nuevo token, usa un token de solo lectura sin rol
-	token, err := h.getUserAPITokenWithRole(username, "")
+	// Si el usuario es admin, incluye el claim role=admin en el token
+	role := ""
+	if username == "admin" {
+		role = "admin"
+	}
+	token, err := h.getUserAPITokenWithRole(username, role)
 	if err != nil {
 		return user, err
 	}
-	url := fmt.Sprintf("%s/users/%s", h.UserAPIAddress, username)
+	url := fmt.Sprintf("%s/users-api/users/%s", h.UserAPIAddress, username)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 
