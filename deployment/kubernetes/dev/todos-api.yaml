@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todos-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todos-api
+  template:
+    metadata:
+      labels:
+        app: todos-api
+    spec:
+      containers:
+      - name: todos-api
+        image: msworkshop1devacr.azurecr.io/todos-api:latest
+        ports:
+        - containerPort: 8082
+        resources:
+          requests:
+            cpu: "100m"
+          limits:
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todos-api
+spec:
+  type: ClusterIP
+  selector:
+    app: todos-api
+  ports:
+  - port: 8082
+    targetPort: 8082

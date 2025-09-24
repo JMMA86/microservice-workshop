@@ -1,0 +1,13 @@
+# Ignore Docker-related files during build
+.dockerignore
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.nyc_output
+node_modules
+npm-debug.log
+Dockerfile*
+docker-compose*

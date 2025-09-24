@@ -22,7 +22,7 @@
 
 # Auto-generated backend configuration files (contain access keys)
 backend-config.hcl
-GENERATED-backend-config.env
+aks-acr-config.cfg
 
 # Terraform cache and modules
 .terraform/
@@ -60,3 +60,5 @@ Thumbs.db
 
 # Logs
 *.log
+
+**/tfplan
