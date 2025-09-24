@@ -44,7 +44,9 @@ jobs:
 
       - name: Terraform Apply with auto-import (bootstrap)
         working-directory: infrastructure/terraform/bootstrap
-        run: bash ../../scripts/terraform-auto-import.sh
+        run: |
+          chmod +x ../../scripts/terraform-auto-import.sh
+          ../../scripts/terraform-auto-import.sh
 
   # 2. Deploy de infraestructura (ACR, AKS, etc.)
   terraform-dev:
@@ -79,7 +81,9 @@ jobs:
 
       - name: Terraform Apply with auto-import (dev)
         working-directory: infrastructure/terraform/environments/dev
-        run: bash ../../../scripts/terraform-auto-import.sh
+        run: |
+          chmod +x ../../scripts/terraform-auto-import.sh
+          ../../scripts/terraform-auto-import.sh
 
       - name: Get Terraform Outputs
         id: terraform-output
