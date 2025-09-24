@@ -16,13 +16,6 @@ terraform {
     }
   }
 
-  # Remote state configuration (uncomment for production)
-  # backend "azurerm" {
-  #   resource_group_name  = "terraform-state-rg"
-  #   storage_account_name = "terraformstate"
-  #   container_name       = "tfstate"
-  #   key                 = "microservices-workshop/dev.terraform.tfstate"
-  # }
 }
 
 provider "azurerm" {
@@ -42,16 +35,10 @@ provider "azurerm" {
 # Data source for current Azure client configuration
 data "azurerm_client_config" "current" {}
 
-# Random suffix for unique resource names
-resource "random_id" "suffix" {
-  byte_length = 4
-}
-
 # Local values for consistent naming and tagging
 locals {
   environment     = var.environment
   project_name    = var.project_name
-  resource_suffix = random_id.suffix.hex
   location        = var.location
 
   # Naming convention
@@ -74,7 +61,7 @@ locals {
 # RESOURCE GROUP
 # =============================================================================
 resource "azurerm_resource_group" "main" {
-  name     = "${local.naming_prefix}-rg-${local.resource_suffix}"
+  name     = "${local.naming_prefix}-rg"
   location = local.location
   tags     = local.common_tags
 }
@@ -85,18 +72,15 @@ resource "azurerm_resource_group" "main" {
 module "networking" {
   source = "../../modules/networking"
 
-  vnet_name           = "${local.naming_prefix}-vnet-${local.resource_suffix}"
+  vnet_name           = "${local.naming_prefix}-vnet"
   address_space       = var.vnet_address_space
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  subnet_prefix       = "${local.naming_prefix}-${local.resource_suffix}"
+  subnet_prefix       = "${local.naming_prefix}"
 
-  # Subnet configuration
-  aks_subnet_cidr               = var.aks_subnet_cidr
-  app_gateway_subnet_cidr       = var.app_gateway_subnet_cidr
-  private_endpoints_subnet_cidr = var.private_endpoints_subnet_cidr
-
-  tags = local.common_tags
+  # Subnet configuration - Simplified for cost optimization
+  aks_subnet_cidr     = var.aks_subnet_cidr
+  tags                = local.common_tags
 }
 
 # =============================================================================
@@ -105,7 +89,7 @@ module "networking" {
 module "security" {
   source = "../../modules/security"
 
-  key_vault_name      = "${local.project_name}${local.environment}kv${local.resource_suffix}"
+  key_vault_name      = "${local.project_name}${local.environment}kv"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   sku_name            = var.key_vault_sku
@@ -147,14 +131,9 @@ module "security" {
 
   # App Configuration
   enable_app_configuration = var.enable_app_configuration
-  app_config_name          = "${local.project_name}${local.environment}config${local.resource_suffix}"
+  app_config_name          = "${local.project_name}${local.environment}config"
   app_config_sku           = var.app_config_sku
   app_configuration_keys   = var.app_configuration_keys
-
-  # Private endpoints (disabled for dev environment for cost optimization)
-  enable_key_vault_private_endpoint  = var.enable_private_endpoints
-  enable_app_config_private_endpoint = var.enable_private_endpoints
-  private_endpoint_subnet_id         = var.enable_private_endpoints ? module.networking.private_endpoints_subnet_id : null
 
   tags = local.common_tags
 
@@ -167,7 +146,7 @@ module "security" {
 module "acr" {
   source = "../../modules/acr"
 
-  registry_name       = "${local.project_name}${local.environment}acr${local.resource_suffix}"
+  registry_name       = "${local.project_name}${local.environment}acr"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = var.acr_sku
@@ -180,13 +159,6 @@ module "acr" {
   # Cost optimization policies
   retention_policy = var.acr_retention_policy
 
-  # Private endpoint (disabled for dev environment)
-  enable_private_endpoint    = var.enable_private_endpoints
-  private_endpoint_subnet_id = var.enable_private_endpoints ? module.networking.private_endpoints_subnet_id : null
-
-  # Webhooks for CI/CD integration
-  webhooks = var.acr_webhooks
-
   tags = local.common_tags
 
   depends_on = [module.networking]
@@ -198,7 +170,7 @@ module "acr" {
 module "aks" {
   source = "../../modules/aks"
 
-  cluster_name        = "${local.naming_prefix}-aks-${local.resource_suffix}"
+  cluster_name        = "${local.naming_prefix}-aks"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   dns_prefix          = "${local.naming_prefix}-aks"
@@ -247,6 +219,22 @@ module "aks" {
   depends_on = [module.networking, module.acr]
 }
 
+provider "kubernetes" {
+  host                   = module.aks.host
+  client_certificate     = base64decode(module.aks.kube_config[0].client_certificate)
+  client_key             = base64decode(module.aks.kube_config[0].client_key)
+  cluster_ca_certificate = base64decode(module.aks.kube_config[0].cluster_ca_certificate)
+}
+
+provider "helm" {
+  kubernetes =  {
+    host                   = module.aks.host
+    client_certificate     = base64decode(module.aks.kube_config[0].client_certificate)
+    client_key             = base64decode(module.aks.kube_config[0].client_key)
+    cluster_ca_certificate = base64decode(module.aks.kube_config[0].cluster_ca_certificate)
+  }
+}
+
 # =============================================================================
 # ACR-AKS INTEGRATION
 # =============================================================================
@@ -254,6 +242,23 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
   scope                = module.acr.registry_id
   role_definition_name = "AcrPull"
   principal_id         = module.aks.kubelet_identity.object_id
+}
+
+resource "helm_release" "nginx_ingress" {
+  name       = "ingress-nginx"
+  repository = "https://kubernetes.github.io/ingress-nginx"
+  chart      = "ingress-nginx"
+  namespace  = "ingress-nginx"
+  version    = "4.10.0"
+
+  create_namespace = true
+
+  set = [{
+    name  = "controller.publishService.enabled"
+    value = "true"
+  }]
+
+  depends_on = [module.aks]
 }
 
 # =============================================================================
@@ -297,29 +302,4 @@ resource "azurerm_consumption_budget_resource_group" "main" {
       contact_emails = var.alert_emails
     }
   }
-}
-
-# =============================================================================
-# AUTO-SHUTDOWN AUTOMATION ACCOUNT (Optional)
-# =============================================================================
-resource "azurerm_automation_account" "auto_shutdown" {
-  count               = var.enable_auto_shutdown ? 1 : 0
-  name                = "${local.naming_prefix}-automation-${local.resource_suffix}"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
-  sku_name            = "Basic"
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  tags = local.common_tags
-}
-
-# Role assignment for automation account to manage resources
-resource "azurerm_role_assignment" "automation_contributor" {
-  count                = var.enable_auto_shutdown ? 1 : 0
-  scope                = azurerm_resource_group.main.id
-  role_definition_name = "Contributor"
-  principal_id         = azurerm_automation_account.auto_shutdown[0].identity[0].principal_id
 }

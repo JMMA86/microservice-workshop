@@ -34,18 +34,6 @@ variable "aks_subnet_cidr" {
   default     = "10.0.1.0/24"
 }
 
-variable "app_gateway_subnet_cidr" {
-  description = "CIDR block for Application Gateway subnet"
-  type        = string
-  default     = "10.0.2.0/24"
-}
-
-variable "private_endpoints_subnet_cidr" {
-  description = "CIDR block for Private Endpoints subnet"
-  type        = string
-  default     = "10.0.3.0/24"
-}
-
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
