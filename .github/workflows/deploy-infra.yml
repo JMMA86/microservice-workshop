@@ -66,6 +66,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build and Push Docker Images
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           ACR_NAME="msworkshop1devacr"
           if [ -z "$ACR_NAME" ]; then
@@ -88,18 +93,21 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Get AKS Credentials
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           az aks get-credentials --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --name ${{ secrets.AKS_CLUSTER_NAME }}
 
       - name: Deploy to Kubernetes
         run: |
-          ACR_NAME="${{ needs.terraform-dev.outputs.acr_name }}"
+          ACR_NAME="msworkshop1devacr"
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
           find ./k8s -name "*.yaml" -o -name "*.yml" | while read manifest; do
             envsubst < $manifest | kubectl apply -f -
           done
-        env:
-          ACR_LOGIN_SERVER: ${{ needs.terraform-dev.outputs.acr_name }}.azurecr.io
 
       - name: Check Deployment Status
         run: |
