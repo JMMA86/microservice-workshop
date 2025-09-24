@@ -68,37 +68,18 @@ jobs:
       - name: Build and Push Docker Images
         run: |
           az login --service-principal \
-          --username ${{ secrets.AZURE_CLIENT_ID }} \
-          --password ${{ secrets.AZURE_CLIENT_SECRET }} \
-          --tenant ${{ secrets.AZURE_TENANT_ID }} 
+            --username ${{ secrets.AZURE_CLIENT_ID }} \
+            --password ${{ secrets.AZURE_CLIENT_SECRET }} \
+            --tenant ${{ secrets.AZURE_TENANT_ID }}
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
           ACR_NAME="msworkshop1devacr"
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
           az acr login --name $ACR_NAME
-  
-          declare -A services
-          services=(
-            ["log-message-processor"]="microservices/log-message-processor/"
-            ["auth-api"]="microservices/auth-api/"
-            ["frontend"]="microservices/frontend/"
-            ["todos-api"]="microservices/todos-api/"
-            ["users-api"]="microservices/users-api/"
-          )
-  
-          # Obtener archivos modificados en el commit
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-  
-          for img in "${!services[@]}"; do
-            DIR=${services[$img]}
-            if echo "$CHANGED_FILES" | grep -q "^$DIR"; then
-              echo "Building and pushing $img"
-              docker build -t $img:latest ./$DIR
-              docker tag $img:latest $ACR_LOGIN_SERVER/$img:latest
-              docker push $ACR_LOGIN_SERVER/$img:latest
-            else
-              echo "Skipping $img, no changes detected"
-            fi
+          declare -a images=("log-message-processor" "auth-api" "frontend" "todos-api" "users-api")
+          for img in "${images[@]}"; do
+            docker build -t $img:latest ./microservices/$img
+            docker tag $img:latest $ACR_LOGIN_SERVER/$img:latest
+            docker push $ACR_LOGIN_SERVER/$img:latest
           done
 
   deploy-kubernetes:
