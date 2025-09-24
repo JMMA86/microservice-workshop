@@ -50,7 +50,12 @@ jobs:
           ATTEMPT=0
 
           run_apply() {
-            terraform apply -auto-approve tfplan 2>&1 || true
+            set +e
+            OUT=$(terraform apply -auto-approve tfplan 2>&1)
+            CODE=$?
+            set -e
+            echo "$OUT"
+            return $CODE
           }
 
           extract_and_import() {
@@ -66,11 +71,12 @@ jobs:
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             ATTEMPT=$((ATTEMPT+1))
             echo "Attempt #$ATTEMPT"
-            OUT=$(run_apply)
+            OUT=$(run_apply || true)
             echo "$OUT"
             if echo "$OUT" | grep -q 'A resource with the ID'; then
               extract_and_import "$OUT"
             else
+              echo "Apply succeeded"
               break
             fi
           done
@@ -114,7 +120,12 @@ jobs:
           ATTEMPT=0
 
           run_apply() {
-            terraform apply -auto-approve tfplan 2>&1 || true
+            set +e
+            OUT=$(terraform apply -auto-approve tfplan 2>&1)
+            CODE=$?
+            set -e
+            echo "$OUT"
+            return $CODE
           }
 
           extract_and_import() {
@@ -130,11 +141,12 @@ jobs:
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             ATTEMPT=$((ATTEMPT+1))
             echo "Attempt #$ATTEMPT"
-            OUT=$(run_apply)
+            OUT=$(run_apply || true)
             echo "$OUT"
             if echo "$OUT" | grep -q 'A resource with the ID'; then
               extract_and_import "$OUT"
             else
+              echo "Apply succeeded"
               break
             fi
           done
