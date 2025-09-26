@@ -14,9 +14,16 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: msworkshop1devacr.azurecr.io/frontend:latest
+        image: ${ACR_LOGIN_SERVER}/frontend:latest
         ports:
         - containerPort: 80
+        env:
+          - name: VUE_APP_AUTH_API_ADDRESS
+            value: "http://${AZURE_IP}/auth-api"
+          - name: VUE_APP_TODOS_API_ADDRESS
+            value: "http://${AZURE_IP}/todos-api"
+          - name: VUE_APP_ZIPKIN_URL
+            value: "${ZIPKIN_URL}"
 ---
 apiVersion: v1
 kind: Service

@@ -67,18 +67,18 @@ jobs:
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           # AZURE_IP se obtendrá en runtime durante el deploy
-          AUTH_API_PORT: ${{ secrets.AUTH_API_PORT }}
-          TODOS_API_PORT: ${{ secrets.TODOS_API_PORT }}
-          USERS_API_PORT: ${{ secrets.USERS_API_PORT }}
-          FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT_TODOS: ${{ secrets.REDIS_PORT_TODOS }}
-          REDIS_PORT_LOG: ${{ secrets.REDIS_PORT_LOG }}
-          REDIS_CHANNEL: ${{ secrets.REDIS_CHANNEL }}
-          ZIPKIN_HOST: ${{ secrets.ZIPKIN_HOST }}
-          ZIPKIN_PORT: ${{ secrets.ZIPKIN_PORT }}
-          ZIPKIN_URL: ${{ secrets.ZIPKIN_URL }}
-          USERS_API_URL: ${{ secrets.USERS_API_URL }}
+          AUTH_API_PORT: ${{ vars.AUTH_API_PORT }}
+          TODOS_API_PORT: ${{ vars.TODOS_API_PORT }}
+          USERS_API_PORT: ${{ vars.USERS_API_PORT }}
+          FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT_TODOS: ${{ vars.REDIS_PORT_TODOS }}
+          REDIS_PORT_LOG: ${{ vars.REDIS_PORT_LOG }}
+          REDIS_CHANNEL: ${{ vars.REDIS_CHANNEL }}
+          ZIPKIN_HOST: ${{ vars.ZIPKIN_HOST }}
+          ZIPKIN_PORT: ${{ vars.ZIPKIN_PORT }}
+          ZIPKIN_URL: ${{ vars.ZIPKIN_URL }}
+          USERS_API_URL: ${{ vars.USERS_API_URL }}
         run: |
           az login --service-principal \
             --username ${{ secrets.AZURE_CLIENT_ID }} \
@@ -112,7 +112,7 @@ jobs:
 
   deploy-kubernetes:
     runs-on: ubuntu-latest
-    needs: [terraform-dev , build-and-push]
+    needs: [ terraform-dev, build-and-push ]
     steps:
       - uses: actions/checkout@v4
 
@@ -147,7 +147,7 @@ jobs:
             echo "Attempt $i: External IP not ready yet, waiting 30 seconds..."
             sleep 30
           done
-          
+
           if [[ -z "$EXTERNAL_IP" || "$EXTERNAL_IP" == "null" ]]; then
             echo "Error: Could not obtain external IP after 10 minutes"
             exit 1
@@ -157,18 +157,18 @@ jobs:
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           # AZURE_IP se obtiene dinámicamente del step anterior
-          AUTH_API_PORT: ${{ secrets.AUTH_API_PORT }}
-          TODOS_API_PORT: ${{ secrets.TODOS_API_PORT }}
-          USERS_API_PORT: ${{ secrets.USERS_API_PORT }}
-          FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT_TODOS: ${{ secrets.REDIS_PORT_TODOS }}
-          REDIS_PORT_LOG: ${{ secrets.REDIS_PORT_LOG }}
-          REDIS_CHANNEL: ${{ secrets.REDIS_CHANNEL }}
-          ZIPKIN_HOST: ${{ secrets.ZIPKIN_HOST }}
-          ZIPKIN_PORT: ${{ secrets.ZIPKIN_PORT }}
-          ZIPKIN_URL: ${{ secrets.ZIPKIN_URL }}
-          USERS_API_URL: ${{ secrets.USERS_API_URL }}
+          AUTH_API_PORT: ${{ vars.AUTH_API_PORT }}
+          TODOS_API_PORT: ${{ vars.TODOS_API_PORT }}
+          USERS_API_PORT: ${{ vars.USERS_API_PORT }}
+          FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT_TODOS: ${{ vars.REDIS_PORT_TODOS }}
+          REDIS_PORT_LOG: ${{ vars.REDIS_PORT_LOG }}
+          REDIS_CHANNEL: ${{ vars.REDIS_CHANNEL }}
+          ZIPKIN_HOST: ${{ vars.ZIPKIN_HOST }}
+          ZIPKIN_PORT: ${{ vars.ZIPKIN_PORT }}
+          ZIPKIN_URL: ${{ vars.ZIPKIN_URL }}
+          USERS_API_URL: ${{ vars.USERS_API_URL }}
         run: |
           ACR_NAME="msworkshop1devacr"
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
@@ -181,23 +181,23 @@ jobs:
       - name: Rebuild Frontend with Real IP
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          AUTH_API_PORT: ${{ secrets.AUTH_API_PORT }}
-          TODOS_API_PORT: ${{ secrets.TODOS_API_PORT }}
-          USERS_API_PORT: ${{ secrets.USERS_API_PORT }}
-          FRONTEND_PORT: ${{ secrets.FRONTEND_PORT }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PORT_TODOS: ${{ secrets.REDIS_PORT_TODOS }}
-          REDIS_PORT_LOG: ${{ secrets.REDIS_PORT_LOG }}
-          REDIS_CHANNEL: ${{ secrets.REDIS_CHANNEL }}
-          ZIPKIN_HOST: ${{ secrets.ZIPKIN_HOST }}
-          ZIPKIN_PORT: ${{ secrets.ZIPKIN_PORT }}
-          ZIPKIN_URL: ${{ secrets.ZIPKIN_URL }}
-          USERS_API_URL: ${{ secrets.USERS_API_URL }}
+          AUTH_API_PORT: ${{ vars.AUTH_API_PORT }}
+          TODOS_API_PORT: ${{ vars.TODOS_API_PORT }}
+          USERS_API_PORT: ${{ vars.USERS_API_PORT }}
+          FRONTEND_PORT: ${{ vars.FRONTEND_PORT }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT_TODOS: ${{ vars.REDIS_PORT_TODOS }}
+          REDIS_PORT_LOG: ${{ vars.REDIS_PORT_LOG }}
+          REDIS_CHANNEL: ${{ vars.REDIS_CHANNEL }}
+          ZIPKIN_HOST: ${{ vars.ZIPKIN_HOST }}
+          ZIPKIN_PORT: ${{ vars.ZIPKIN_PORT }}
+          ZIPKIN_URL: ${{ vars.ZIPKIN_URL }}
+          USERS_API_URL: ${{ vars.USERS_API_URL }}
         run: |
           echo "Rebuilding frontend with real Azure IP: $AZURE_IP"
           ACR_NAME="msworkshop1devacr"
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
-          
+
           # Rebuild frontend with the real IP
           docker build -t frontend:latest ./microservices/frontend \
             --build-arg JWT_SECRET=$JWT_SECRET \
@@ -214,10 +214,10 @@ jobs:
             --build-arg ZIPKIN_PORT=$ZIPKIN_PORT \
             --build-arg ZIPKIN_URL=$ZIPKIN_URL \
             --build-arg USERS_API_URL=$USERS_API_URL
-          
+
           docker tag frontend:latest $ACR_LOGIN_SERVER/frontend:latest
           docker push $ACR_LOGIN_SERVER/frontend:latest
-          
+
           # Restart frontend deployment to use new image
           kubectl rollout restart deployment/frontend -n default
 

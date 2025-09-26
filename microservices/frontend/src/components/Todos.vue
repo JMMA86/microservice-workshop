@@ -56,8 +56,10 @@
 import AppNav from '@/components/AppNav'
 import TodoItem from '@/components/TodoItem'
 import Spinner from '@/components/common/Spinner'
+import getConfig from '@/config'
 
-const TODOS_API_URL = process.env.VUE_APP_TODOS_API_ADDRESS || 'http://57.151.78.16/todos-api'
+const config = getConfig()
+const TODOS_API_URL = config.TODOS_API_ADDRESS
 
 export default {
   name: 'todos',

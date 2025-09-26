@@ -25,11 +25,18 @@ RUN npm install --verbose --no-optional
 # Copy source code
 COPY . .
 
-# Set default environment variables
-ENV PORT=${FRONTEND_PORT:-80}
-ENV VUE_APP_AUTH_API_ADDRESS=http://${AZURE_IP}/auth-api
-ENV VUE_APP_TODOS_API_ADDRESS=http://${AZURE_IP}/todos-api
-ENV VUE_APP_ZIPKIN_URL=${ZIPKIN_URL:-http://zipkin:9411/api/v2/spans}
+# Define build arguments
+ARG AZURE_IP=PLACEHOLDER_AZURE_IP
+ARG FRONTEND_PORT=80
+ARG AUTH_API_PORT=8081
+ARG TODOS_API_PORT=8082
+ARG ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+
+# Convert ARGs to ENV variables for Vue.js build process
+ENV PORT=${FRONTEND_PORT}
+ENV VUE_APP_AUTH_API_ADDRESS=http://${AZURE_IP}:${AUTH_API_PORT}
+ENV VUE_APP_TODOS_API_ADDRESS=http://${AZURE_IP}:${TODOS_API_PORT}
+ENV VUE_APP_ZIPKIN_URL=${ZIPKIN_URL}
 
 # Build the application
 RUN npm run build
@@ -40,11 +47,15 @@ FROM nginx:alpine
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Copy the configuration generation script
+COPY generate-config.sh /usr/local/bin/generate-config.sh
+RUN chmod +x /usr/local/bin/generate-config.sh
+
 # Copy nginx configuration (optional - create if needed)
 # COPY nginx.conf /etc/nginx/nginx.conf
 
 # Expose port 80
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start with configuration generation
+CMD ["/usr/local/bin/generate-config.sh"]

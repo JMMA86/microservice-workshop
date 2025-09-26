@@ -3,12 +3,14 @@ import router from './router'
 import store from './store'
 import decode from 'jwt-decode'
 import CircuitBreaker from './circuitbreaker'
+import getConfig from './config'
 
 /**
  * @var{string} LOGIN_URL The endpoint for logging in. This endpoint should be proxied by Webpack dev server
  *    and maybe nginx in production (cleaner calls and avoids CORS issues).
  */
-const LOGIN_URL = (process.env.VUE_APP_AUTH_API_ADDRESS || 'http://57.151.78.16/auth-api') + "/login"
+const config = getConfig()
+const LOGIN_URL = config.AUTH_API_ADDRESS + "/login"
 const ROLE_ADMIN = 'ADMIN'
 
 // Initialize circuit breaker for auth service: 3 failures, 30 seconds timeout
