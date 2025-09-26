@@ -14,10 +14,10 @@ RUN apk add build-base
 RUN pip install -r requirements.txt
 
 # Environment variables
-ENV REDIS_HOST=redis
-ENV REDIS_ZHK_PORT=6739
-ENV REDIS_CHANNEL=log_channel
-ENV ZIPKIN_URL=http://zipkin:9411/api/v2/spans
+ENV REDIS_HOST=${REDIS_HOST:-redis}
+ENV REDIS_ZHK_PORT=${REDIS_PORT_LOG:-6739}
+ENV REDIS_CHANNEL=${REDIS_CHANNEL:-log_channel}
+ENV ZIPKIN_URL=${ZIPKIN_URL:-http://zipkin:9411/api/v2/spans}
 
 # Execute the application
 CMD ["python3","-u","main.py"]

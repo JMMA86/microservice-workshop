@@ -31,8 +31,7 @@ USER spring
 EXPOSE 8080
 
 # Set default environment variables
-ENV JWT_SECRET=myfancysecret
-ENV SERVER_PORT=8080
+ENV SERVER_PORT=${USERS_API_PORT:-8083}
 
 # Set JVM options for container
 ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"

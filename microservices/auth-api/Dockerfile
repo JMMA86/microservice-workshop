@@ -32,9 +32,8 @@ COPY --from=builder /app/main .
 EXPOSE 8080
 
 # Set default environment variables
-ENV AUTH_ZHK_API_PORT=8080
-ENV USERS_API_ADDRESS=http://users-api:8083
-ENV JWT_SECRET=myfancysecret
+ENV AUTH_ZHK_API_PORT=${AUTH_API_PORT:-8080}
+ENV USERS_API_ADDRESS=${USERS_API_URL:-http://users-api:8083}
 
 # Run the binary
 CMD ["./main"]
