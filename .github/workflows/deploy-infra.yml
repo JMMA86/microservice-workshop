@@ -174,7 +174,7 @@ jobs:
           ACR_LOGIN_SERVER=$ACR_NAME.azurecr.io
           export ACR_LOGIN_SERVER
           echo "Using dynamic AZURE_IP: $AZURE_IP"
-          find ./deployment/kubernetes/dev -name "*.yaml" -o -name "*.yml" | while read manifest; do
+          find ./deployment/kubernetes/dev -name "*.yaml" -o -name "*.yml" | grep -v "kustomization.yaml" | while read manifest; do
             envsubst < $manifest | kubectl apply -f -
           done
 
