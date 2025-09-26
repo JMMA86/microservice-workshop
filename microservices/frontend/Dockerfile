@@ -26,7 +26,7 @@ RUN npm install --verbose --no-optional
 COPY . .
 
 # Set default environment variables
-ENV PORT=80
+ARG PORT=80
 ENV VUE_APP_AUTH_API_ADDRESS=http://57.151.78.16/auth-api
 ENV VUE_APP_TODOS_API_ADDRESS=http://57.151.78.16/todos-api
 ENV VUE_APP_ZIPKIN_URL=http://57.151.78.16/zipkin/api/v2/spans

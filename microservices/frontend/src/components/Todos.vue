@@ -57,7 +57,7 @@ import AppNav from '@/components/AppNav'
 import TodoItem from '@/components/TodoItem'
 import Spinner from '@/components/common/Spinner'
 
-const TODOS_API_URL = process.env.VUE_APP_TODOS_API_ADDRESS || 'http://57.151.78.16/todos-api'
+const TODOS_API_URL = process.env.VUE_APP_TODOS_API_ADDRESS || 'http://todos-api'
 
 export default {
   name: 'todos',
