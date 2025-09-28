@@ -208,6 +208,38 @@ jobs:
 
       - name: Check Deployment Status
         run: |
-          kubectl get pods
-          kubectl get services
-          kubectl get deployments
+          # Esperar a que todos los pods estén en estado Running y listos
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            not_ready=0
+            # Listar todos los pods y verificar su estado
+            while read -r name ready status rest; do
+              if [ -z "$name" ]; then continue; fi
+              ready_count=$(echo $ready | cut -d'/' -f1)
+              total_count=$(echo $ready | cut -d'/' -f2)
+              if [ "$ready_count" != "$total_count" ] || [ "$status" != "Running" ]; then
+                not_ready=1
+                break
+              fi
+            done < <(kubectl get pods --no-headers)
+            if [ $not_ready -eq 0 ]; then
+              echo "Todos los pods están en estado Running."
+              break
+            fi
+            sleep 1
+            attempt=$((attempt+1))
+          done
+          if [ $not_ready -ne 0 ]; then
+            echo "Error: No todos los pods están en estado Running tras esperar." >&2
+            kubectl get pods
+            exit 1
+          fi
+          echo "\n=== REINICIANDO PODS ==="
+          kubectl rollout restart deployment auth-api frontend log-message-processor todos-api users-api zipkin redis
+          if [ $? -ne 0 ]; then
+            echo "Error en kubectl rollout restart" >&2
+            exit 1
+          fi
+          echo "\nDespliegue exitoso."
+          kubectl get svc -A
