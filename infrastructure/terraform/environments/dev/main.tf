@@ -269,7 +269,7 @@ data "kubernetes_service" "ingress_nginx" {
   depends_on = [helm_release.nginx_ingress]
 }
 
-output "INGRESS_PUBLIC_IP" {
+output "ingress_public_ip" {
   description = "IP pública del servicio ingress-nginx-controller"
   value       = try(data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].ip, null)
 }
