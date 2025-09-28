@@ -72,28 +72,9 @@ resource "azurerm_storage_account" "tfstate" {
   }
 }
 
-# Container for Terraform state files
+# Additional containers for different environments
 resource "azurerm_storage_container" "tfstate" {
   name                  = "tfstate"
-  storage_account_name  = azurerm_storage_account.tfstate.name
-  container_access_type = "private"
-}
-
-# Additional containers for different environments
-resource "azurerm_storage_container" "tfstate_dev" {
-  name                  = "tfstate-dev"
-  storage_account_name  = azurerm_storage_account.tfstate.name
-  container_access_type = "private"
-}
-
-resource "azurerm_storage_container" "tfstate_staging" {
-  name                  = "tfstate-staging"
-  storage_account_name  = azurerm_storage_account.tfstate.name
-  container_access_type = "private"
-}
-
-resource "azurerm_storage_container" "tfstate_prod" {
-  name                  = "tfstate-prod"
   storage_account_name  = azurerm_storage_account.tfstate.name
   container_access_type = "private"
 }

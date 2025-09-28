@@ -14,4 +14,4 @@ configMapGenerator:
   - name: acr-config
     behavior: create
     literals:
-      - acrName=msworkshop1devacr.azurecr.io
+      - acrName=msworkshopdevacr.azurecr.io

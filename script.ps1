@@ -2,7 +2,7 @@
 Write-Host "Creating Docker Images for Microservices..."
 
 # Variables para el ACR
-$acrName = "msworkshop1devacr"
+$acrName = "msworkshopdevacr"
 $acrLoginServer = "$acrName.azurecr.io"
 
 # Login en Azure Container Registry

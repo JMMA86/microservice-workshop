@@ -84,15 +84,15 @@ Before running the deployment scripts, ensure you have:
 2. **ACR Login**
    ```powershell
    # Connects to Azure Container Registry
-   az acr login --name msworkshop1devacr
+   az acr login --name msworkshopdevacr
    ```
 
 3. **Image Building and Pushing**
    ```powershell
    # For each microservice:
    docker build -t servicename:latest ./microservices/servicename
-   docker tag servicename:latest msworkshop1devacr.azurecr.io/servicename:latest
-   docker push msworkshop1devacr.azurecr.io/servicename:latest
+   docker tag servicename:latest msworkshopdevacr.azurecr.io/servicename:latest
+   docker push msworkshopdevacr.azurecr.io/servicename:latest
    ```
 
 #### Microservices Built
@@ -122,7 +122,7 @@ Before running the deployment scripts, ensure you have:
    ```powershell
    # Login and get AKS credentials
    az login --service-principal
-   az aks get-credentials --resource-group msworkshop1-dev-rg --name msworkshop1-dev-aks
+   az aks get-credentials --resource-group msworkshop-dev-rg --name msworkshop-dev-aks
    ```
 
 2. **Application Deployment**
@@ -188,16 +188,16 @@ Before running the deployment scripts, ensure you have:
 ### After Infrastructure Deployment
 ```powershell
 # Verify AKS cluster
-az aks show --resource-group msworkshop1-dev-rg --name msworkshop1-dev-aks
+az aks show --resource-group msworkshop-dev-rg --name msworkshop-dev-aks
 
 # Verify ACR
-az acr show --name msworkshop1devacr
+az acr show --name msworkshopdevacr
 ```
 
 ### After Image Deployment
 ```powershell
 # List images in ACR
-az acr repository list --name msworkshop1devacr
+az acr repository list --name msworkshopdevacr
 ```
 
 ### After Kubernetes Deployment
@@ -224,9 +224,9 @@ $env:AZURE_SUBSCRIPTION_ID = "f3232678-472a-4a87-b56e-c8cbfa96666e"
 ```
 
 ### Resource Names
-- **Resource Group**: `msworkshop1-dev-rg`
-- **AKS Cluster**: `msworkshop1-dev-aks`
-- **ACR**: `msworkshop1devacr`
+- **Resource Group**: `msworkshop-dev-rg`
+- **AKS Cluster**: `msworkshop-dev-aks`
+- **ACR**: `msworkshopdevacr`
 
 ## Troubleshooting
 

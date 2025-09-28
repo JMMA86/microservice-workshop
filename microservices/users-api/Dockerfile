@@ -31,11 +31,15 @@ USER spring
 EXPOSE 8080
 
 # Set default environment variables
-ENV JWT_SECRET=myfancysecret
-ENV SERVER_PORT=8080
+ARG JWT_SECRET
+ARG SERVER_PORT
+ARG JAVA_OPTS
+ENV JWT_SECRET=$JWT_SECRET
+ENV SERVER_PORT=$SERVER_PORT
+ENV JAVA_OPTS=$JAVA_OPTS
 
 # Set JVM options for container
-ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+# ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
