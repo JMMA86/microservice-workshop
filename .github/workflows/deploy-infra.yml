@@ -42,7 +42,7 @@ jobs:
           terraform init \
           -backend-config="resource_group_name=terraform-state-rg" \
           -backend-config="storage_account_name=msworkshoptfstate" \
-          -backend-config="container_name=tfstate-dev" \
+          -backend-config="container_name=tfstate" \
           -backend-config="key=dev/terraform.tfstate"
 
       - name: Terraform Plan (dev)
