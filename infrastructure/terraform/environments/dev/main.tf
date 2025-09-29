@@ -286,7 +286,7 @@ resource "azurerm_consumption_budget_resource_group" "main" {
 
   time_period {
     start_date = "2025-09-01T00:00:00Z"
-    end_date   = "2025-09-30T23:59:59Z"
+    end_date   = "2025-10-30T23:59:59Z"
   }
 
   notification {
