@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: zipkin
-        image: msworkshop1devacr.azurecr.io/zipkin
+        image: msworkshopdevacr.azurecr.io/zipkin
         ports:
         - containerPort: 9411
 ---

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: redis
-        image: msworkshop1devacr.azurecr.io/redis
+        image: msworkshopdevacr.azurecr.io/redis
         ports:
         - containerPort: 6379
 ---

@@ -62,7 +62,8 @@ func (h *UserService) getUser(ctx context.Context, username string) (User, error
 		return user, err
 	}
 
-	url := fmt.Sprintf("%s/users-api/users/%s", h.UserAPIAddress, username)
+	fmt.Println("[auth-api] UserAPIAddress:", h.UserAPIAddress)
+	url := fmt.Sprintf("%s/users/%s", h.UserAPIAddress, username)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 	req = req.WithContext(ctx)
