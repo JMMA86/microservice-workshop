@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: users-api
-        image: msworkshop1devacr.azurecr.io/users-api:latest
+        image: msworkshopdevacr.azurecr.io/users-api:latest
         ports:
         - containerPort: 8080
 ---

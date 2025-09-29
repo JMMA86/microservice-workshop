@@ -18,5 +18,5 @@ variable "location" {
 variable "environment_prefix" {
   description = "Prefix for environment-specific resources"
   type        = string
-  default     = "msworkshop1"
+  default     = "msworkshop"
 }

@@ -261,6 +261,19 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [module.aks]
 }
 
+data "kubernetes_service" "ingress_nginx" {
+  metadata {
+    name      = "ingress-nginx-controller"
+    namespace = "ingress-nginx"
+  }
+  depends_on = [helm_release.nginx_ingress]
+}
+
+output "ingress_public_ip" {
+  description = "IP pública del servicio ingress-nginx-controller"
+  value       = try(data.kubernetes_service.ingress_nginx.status[0].load_balancer[0].ingress[0].ip, null)
+}
+
 # =============================================================================
 # BUDGET AND COST MANAGEMENT
 # =============================================================================
@@ -272,8 +285,8 @@ resource "azurerm_consumption_budget_resource_group" "main" {
   time_grain = "Monthly"
 
   time_period {
-    start_date = formatdate("YYYY-MM-01'T'00:00:00Z", timestamp())
-    end_date   = timeadd(formatdate("YYYY-MM-01'T'00:00:00Z", timestamp()), "8760h") # 1 year
+    start_date = "2025-09-01T00:00:00Z"
+    end_date   = "2025-09-30T23:59:59Z"
   }
 
   notification {

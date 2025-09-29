@@ -54,10 +54,7 @@ output "storage_account_details" {
 output "containers_created" {
   description = "List of containers created for different environments"
   value = {
-    main    = azurerm_storage_container.tfstate.name
-    dev     = azurerm_storage_container.tfstate_dev.name
-    staging = azurerm_storage_container.tfstate_staging.name
-    prod    = azurerm_storage_container.tfstate_prod.name
+    dev     = azurerm_storage_container.tfstate.name
   }
 }
 
@@ -76,7 +73,7 @@ resource "local_file" "backend_config_dev" {
 
 resource_group_name  = "${azurerm_resource_group.tfstate.name}"
 storage_account_name = "${azurerm_storage_account.tfstate.name}"
-container_name       = "${azurerm_storage_container.tfstate_dev.name}"
+container_name       = "${azurerm_storage_container.tfstate.name}"
 key                 = "dev/terraform.tfstate"
 
 # Access key - use environment variable ARM_ACCESS_KEY instead for security
@@ -88,52 +85,4 @@ key                 = "dev/terraform.tfstate"
 # =============================================================================
 EOT
   filename = "../environments/dev/backend-config.hcl"
-}
-
-# Generate backend-config.hcl for STAGING environment
-resource "local_file" "backend_config_staging" {
-  content = <<-EOT
-# =============================================================================
-# TERRAFORM BACKEND CONFIGURATION FILE - STAGING ENVIRONMENT
-# Generated automatically by bootstrap process
-# =============================================================================
-
-resource_group_name  = "${azurerm_resource_group.tfstate.name}"
-storage_account_name = "${azurerm_storage_account.tfstate.name}"
-container_name       = "${azurerm_storage_container.tfstate_staging.name}"
-key                 = "staging/terraform.tfstate"
-
-# Access key - use environment variable ARM_ACCESS_KEY instead for security
-# access_key = "YOUR_ACCESS_KEY_HERE"
-
-# =============================================================================
-# USAGE:
-# terraform init -backend-config="backend-config.hcl"
-# =============================================================================
-EOT
-  filename = "../environments/staging/backend-config.hcl"
-}
-
-# Generate backend-config.hcl for PROD environment
-resource "local_file" "backend_config_prod" {
-  content = <<-EOT
-# =============================================================================
-# TERRAFORM BACKEND CONFIGURATION FILE - PRODUCTION ENVIRONMENT
-# Generated automatically by bootstrap process
-# =============================================================================
-
-resource_group_name  = "${azurerm_resource_group.tfstate.name}"
-storage_account_name = "${azurerm_storage_account.tfstate.name}"
-container_name       = "${azurerm_storage_container.tfstate_prod.name}"
-key                 = "prod/terraform.tfstate"
-
-# Access key - use environment variable ARM_ACCESS_KEY instead for security
-# access_key = "YOUR_ACCESS_KEY_HERE"
-
-# =============================================================================
-# USAGE:
-# terraform init -backend-config="backend-config.hcl"
-# =============================================================================
-EOT
-  filename = "../environments/prod/backend-config.hcl"
 }

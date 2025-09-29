@@ -29,15 +29,15 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/login': {
-        target: process.env.VUE_APP_AUTH_API_ADDRESS || 'http://57.151.78.16/auth-api',
+        target: process.env.VUE_APP_AUTH_API_ADDRESS || 'http://auth-api',
         secure: false
       },
       '/todos': {
-        target: process.env.VUE_APP_TODOS_API_ADDRESS || 'http://57.151.78.16/todos-api',
+        target: process.env.VUE_APP_TODOS_API_ADDRESS || 'http://todos-api',
         secure: false
       },
       '/zipkin': {
-        target: process.env.VUE_APP_ZIPKIN_URL || 'http://57.151.78.16/api/v2/spans',
+        target: process.env.VUE_APP_ZIPKIN_URL || 'http://api/v2/spans',
         pathRewrite: {
           '^/zipkin': ''
         },

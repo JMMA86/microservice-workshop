@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: log-message-processor
-        image: msworkshop1devacr.azurecr.io/log-message-processor:latest
+        image: msworkshopdevacr.azurecr.io/log-message-processor:latest
         ports:
         - containerPort: 5000
 ---

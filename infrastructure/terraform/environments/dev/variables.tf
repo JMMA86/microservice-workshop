@@ -19,7 +19,7 @@ variable "environment" {
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "msworkshop1"
+  default     = "msworkshop"
 }
 
 variable "location" {
